@@ -755,16 +755,17 @@ export default function RoomPage() {
         rtcModule = (await import("agora-rtc-sdk-ng")).default;
         agoraRTCRef.current = rtcModule;
       }
-      client = rtcModule.createClient({ mode: "rtc", codec: "vp8" });
-      setRtcClient(client);
+      const nextClient = rtcModule.createClient({ mode: "rtc", codec: "vp8" });
+      client = nextClient;
+      setRtcClient(nextClient);
 
-      client.on("user-published", handleUserPublished);
-      client.on("user-unpublished", handleUserUnpublished);
-      client.on("user-left", handleUserLeft);
+      nextClient.on("user-published", handleUserPublished);
+      nextClient.on("user-unpublished", handleUserUnpublished);
+      nextClient.on("user-left", handleUserLeft);
 
       const joinRoom = async () => {
       try {
-        await client!.join(
+        await nextClient.join(
           agoraTokens.appId,
           agoraTokens.channel,
           agoraTokens.rtcToken,
