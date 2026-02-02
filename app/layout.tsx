@@ -1,29 +1,9 @@
 import type { Metadata } from "next";
-import {
-  ClerkProvider,
-} from "@clerk/nextjs";
-import { Bebas_Neue, Source_Sans_3, JetBrains_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import AuthHeader from "./components/AuthHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { ToastStateProvider } from "@/components/ui/use-toast";
-
-const displayFont = Bebas_Neue({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const bodyFont = Source_Sans_3({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const monoFont = JetBrains_Mono({
-  variable: "--font-code",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Podium",
@@ -44,7 +24,7 @@ export default function RootLayout({
     >
       <html lang="en">
       <body
-        className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} antialiased`}
+        className="antialiased font-sans"
       >
         <ToastStateProvider>
           <AuthHeader />

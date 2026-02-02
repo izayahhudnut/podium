@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, getAuth } from "@clerk/nextjs/server";
 import {
   createTopicTemplate,
@@ -7,8 +7,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const { userId } = auth();
+export async function GET(request: NextRequest) {
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
 
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
   return NextResponse.json({ templates });
 }
 
-export async function POST(request: Request) {
-  const { userId } = auth();
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
   const resolvedUsername = fallbackAuth.sessionClaims?.username as

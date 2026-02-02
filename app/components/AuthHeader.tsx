@@ -17,6 +17,7 @@ export default function AuthHeader() {
   if (
     pathname === "/" ||
     pathname === "/home" ||
+    pathname.startsWith("/sign-") ||
     pathname.startsWith("/rooms") ||
     pathname.startsWith("/settings") ||
     pathname === "/topics" ||

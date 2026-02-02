@@ -7,20 +7,23 @@ type SupabaseRequestOptions = {
   headers?: Record<string, string>;
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey =
+const supabaseUrlEnv = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKeyEnv =
   process.env.SUPABASE_SERVICE_ROLE_KEY ??
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
-if (!supabaseUrl) {
+if (!supabaseUrlEnv) {
   throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
 }
 
-if (!supabaseKey) {
+if (!supabaseKeyEnv) {
   throw new Error(
     "Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY"
   );
 }
+
+const supabaseUrl: string = supabaseUrlEnv;
+const supabaseKey: string = supabaseKeyEnv;
 
 export async function supabaseRequest<T>(
   path: string,

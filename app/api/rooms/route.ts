@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser, getAuth } from "@clerk/nextjs/server";
 import { createRoom, getRoomBySlug, getRoomsByOwner } from "@/lib/rooms";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const { userId } = auth();
+export async function GET(request: NextRequest) {
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
 
@@ -17,8 +17,8 @@ export async function GET(request: Request) {
   return NextResponse.json({ rooms });
 }
 
-export async function POST(request: Request) {
-  const { userId } = auth();
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
 

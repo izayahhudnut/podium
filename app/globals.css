@@ -1,25 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --sand: #f8f3ea;
-  --ink: #1b1713;
-  --ink-soft: #2a241f;
-  --card: #fff8ee;
-  --line: #e6dccb;
-  --muted: #6a5f52;
-  --accent: #d97706;
-  --accent-strong: #b45309;
+  --bg: #0b0b0c;
+  --surface: #121214;
+  --surface-2: #17171a;
+  --surface-3: #1c1c20;
+  --line: #2a2a31;
+  --muted: #9a9aa3;
+  --text: #f4f4f6;
+  --accent: #7c5cff;
+  --accent-strong: #6a49ff;
 }
 
 @theme inline {
-  --color-background: var(--sand);
-  --color-foreground: var(--ink);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-body);
   --font-mono: var(--font-code);
 }
 
 body {
-  background: var(--sand);
-  color: var(--ink);
-  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.linkify-theme {
+  --foreground: 0 0% 98%;
+  --background: 0 0% 3.9%;
+  --card: 0 0% 8% / 0.6;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 0 0% 83.1%;
+  --radius: 0.5rem;
+}
+
+::selection {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: hsl(var(--foreground));
+}
+
+.gradient {
+  background: conic-gradient(
+    from 230.29deg at 51.63% 52.16%,
+    rgb(36, 0, 255) 0deg,
+    rgb(0, 135, 255) 67.5deg,
+    rgb(108, 39, 157) 198.75deg,
+    rgb(24, 38, 163) 251.25deg,
+    rgb(54, 103, 196) 301.88deg,
+    rgb(105, 30, 255) 360deg
+  );
 }

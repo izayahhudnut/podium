@@ -27,6 +27,13 @@ import {
 } from "react-icons/fi";
 import { HiOutlineSpeakerphone, HiSparkles } from "react-icons/hi";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
@@ -124,7 +131,7 @@ function VideoTile({
 
   return (
     <div
-      className={`relative aspect-video w-full min-h-[220px] overflow-hidden rounded-3xl border border-black/10 ${
+      className={`relative aspect-video w-full min-h-[220px] overflow-hidden rounded-3xl border border-white/10 ${
         showPlaceholder
           ? "bg-[linear-gradient(135deg,#0f172a,#111827)]"
           : "bg-black"
@@ -299,11 +306,11 @@ function SessionHeader({
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-2 py-1 shadow-[0_8px_20px_rgba(15,15,15,0.08)]">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-2 py-1 shadow-[0_8px_20px_rgba(15,15,15,0.08)]">
           <button
             className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
               running
-                ? "border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50"
+                ? "border border-emerald-200 bg-[#141419] text-emerald-600 hover:bg-emerald-50"
                 : "bg-emerald-500 text-white hover:bg-emerald-600"
             }`}
             onClick={() => {
@@ -321,7 +328,7 @@ function SessionHeader({
             {debateLabel}
           </button>
           <button
-            className="flex items-center rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-black/5"
+            className="flex items-center rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-white/10"
             onClick={onShare}
           >
             <span className="inline-flex items-center gap-2">
@@ -452,7 +459,7 @@ export default function RoomPage() {
     editorProps: {
       attributes: {
         class:
-          "min-h-[280px] rounded-3xl border border-black/10 bg-white px-4 py-3 text-sm text-black/70 outline-none",
+          "min-h-[280px] rounded-3xl border border-white/10 bg-[#141419] px-4 py-3 text-sm text-white/70 outline-none",
       },
     },
   });
@@ -485,7 +492,7 @@ export default function RoomPage() {
     };
 
     if (user?.id) {
-      uidRef.current = buildUid(`user-${user.id}`);
+      uidRef.current = buildUid(`user-${user.id}-${sessionIdRef.current}`);
       return;
     }
 
@@ -1636,26 +1643,26 @@ export default function RoomPage() {
   const waitingForApproval = !isAdmin && !canPublish;
 
   return (
-    <div className="min-h-screen bg-[#f7f6f4] text-[#1f1c17]">
+    <div className="min-h-screen bg-[#0b0b0c] text-white">
       {needsGuestName && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
+          <div className="w-full max-w-md rounded-3xl bg-[#141419] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
             <h2 className="text-2xl font-semibold">
               Join {roomSlug ? `"${roomSlug.replace(/-/g, " ")}"` : "this debate"}{" "}
               as guest
             </h2>
-            <p className="mt-2 text-sm text-black/50">
+            <p className="mt-2 text-sm text-white/50">
               Enter a name to request access to the debate.
             </p>
             <input
               value={guestNameInput}
               onChange={(event) => setGuestNameInput(event.target.value)}
               placeholder="Your name"
-              className="mt-4 w-full rounded-2xl border border-black/10 px-4 py-2 text-base outline-none"
+              className="mt-4 w-full rounded-2xl border border-white/10 px-4 py-2 text-base outline-none"
             />
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                className="rounded-full px-4 py-2 text-sm font-semibold text-black/60"
+                className="rounded-full px-4 py-2 text-sm font-semibold text-white/60"
                 onClick={() => router.push("/")}
               >
                 Leave
@@ -1679,23 +1686,14 @@ export default function RoomPage() {
       )}
       <div className="flex min-h-screen">
         <div className="relative hidden lg:flex">
-          <aside className="flex w-24 flex-col items-center gap-5 border-r border-black/5 bg-white py-6">
-            <button
-              className="flex h-10 w-10 items-center justify-center rounded-full"
-              onClick={() => {
-                handleLeaveRoom("/home");
-              }}
-              aria-label="Exit to home"
-            >
-              <img src="/small-logo.svg" alt="Podium" className="h-9 w-9" />
-            </button>
+          <aside className="flex w-24 flex-col items-center gap-5 border-r border-white/5 bg-[#141419] py-6">
             <div className="grid gap-3">
               <div className="relative">
                 <button
                   className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl text-xs font-semibold transition ${
                     micOn
-                      ? "text-black/70"
-                      : "bg-red-500/20 text-black/60"
+                      ? "text-white/70"
+                      : "bg-red-500/20 text-white/60"
                   }`}
                   onClick={async () => {
                     if (!isAdmin && !canPublish) {
@@ -1713,24 +1711,26 @@ export default function RoomPage() {
                   <img
                     src="/mic.svg"
                     alt="Mic"
-                    className={`h-6 w-6 ${micOn ? "" : "grayscale"}`}
+                    className={`h-6 w-6 brightness-0 invert ${
+                      micOn ? "" : "opacity-60"
+                    }`}
                   />
                   <span>Mic</span>
                 </button>
                 <button
-                  className="absolute bottom-2 right-2 text-[10px] text-black/50"
+                  className="absolute bottom-2 right-2 text-[10px] text-white/50"
                   onClick={() => setShowMicMenu((prev) => !prev)}
                   aria-label="Select microphone"
                 >
                   ▾
                 </button>
                 {showMicMenu && (
-                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-black/10 bg-white p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-black/40">
+                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-white/10 bg-[#141419] p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">
                       Microphone
                     </p>
                     {audioDevices.length === 0 && (
-                      <p className="mt-2 text-[11px] text-black/50">
+                      <p className="mt-2 text-[11px] text-white/50">
                         No microphone detected.
                       </p>
                     )}
@@ -1741,7 +1741,7 @@ export default function RoomPage() {
                         setSelectedAudioDevice(deviceId);
                         await localAudioTrack?.setDevice(deviceId);
                       }}
-                      className="mt-2 w-full rounded-xl border border-black/10 px-2 py-2 text-xs"
+                      className="mt-2 w-full rounded-xl border border-white/10 px-2 py-2 text-xs"
                       disabled={audioDevices.length === 0}
                     >
                       {audioDevices.length === 0 ? (
@@ -1761,8 +1761,8 @@ export default function RoomPage() {
                 <button
                   className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl text-xs font-semibold transition ${
                     cameraOn
-                      ? "text-black/70"
-                      : "bg-red-500/20 text-black/60"
+                      ? "text-white/70"
+                      : "bg-red-500/20 text-white/60"
                   }`}
                   onClick={async () => {
                     if (!isAdmin && !canPublish) {
@@ -1785,15 +1785,15 @@ export default function RoomPage() {
                   <span>Video</span>
                 </button>
                 <button
-                  className="absolute bottom-2 right-2 text-[10px] text-black/50"
+                  className="absolute bottom-2 right-2 text-[10px] text-white/50"
                   onClick={() => setShowCameraMenu((prev) => !prev)}
                   aria-label="Select camera"
                 >
                   ▾
                 </button>
                 {showCameraMenu && (
-                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-black/10 bg-white p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-black/40">
+                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-white/10 bg-[#141419] p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">
                       Camera
                     </p>
                     <select
@@ -1803,7 +1803,7 @@ export default function RoomPage() {
                         setSelectedVideoDevice(deviceId);
                         await localVideoTrack?.setDevice(deviceId);
                       }}
-                      className="mt-2 w-full rounded-xl border border-black/10 px-2 py-2 text-xs"
+                      className="mt-2 w-full rounded-xl border border-white/10 px-2 py-2 text-xs"
                     >
                       {videoDevices.map((device) => (
                         <option key={device.deviceId} value={device.deviceId}>
@@ -1819,8 +1819,8 @@ export default function RoomPage() {
                   key={item.label}
                   className={`group relative flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl text-xs font-semibold transition ${
                     activePanel === item.label.toLowerCase()
-                      ? "bg-black/10 text-black"
-                      : "text-black/60"
+                      ? "bg-white/10 text-white"
+                      : "text-white/60"
                   }`}
                   title={item.label}
                   aria-label={item.label}
@@ -1857,7 +1857,7 @@ export default function RoomPage() {
           </aside>
 
           <div
-            className={`flex h-full flex-col border-r border-black/10 bg-white transition-all duration-300 ${
+            className={`flex h-full flex-col border-r border-white/10 bg-[#0f0f12] transition-all duration-300 ${
               activePanel ? "w-[420px] opacity-100" : "w-0 opacity-0"
             }`}
           >
@@ -1866,11 +1866,13 @@ export default function RoomPage() {
                 <>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                      <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                         {isAdmin ? "Create topics" : "Topics"}
                       </p>
-                      <h2 className="mt-2 text-2xl font-semibold">Topics</h2>
-                      <p className="mt-1 text-sm text-black/50">
+                      <h2 className="mt-2 text-2xl font-semibold text-white">
+                        Topics
+                      </h2>
+                      <p className="mt-1 text-sm text-white/50">
                         Create the agenda for the debate.
                       </p>
                     </div>
@@ -1878,7 +1880,7 @@ export default function RoomPage() {
                       <button
                         className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
                           running
-                            ? "border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50"
+                            ? "border border-emerald-500/40 bg-white/5 text-emerald-300 hover:bg-white/10"
                             : "bg-emerald-500 text-white hover:bg-emerald-600"
                         }`}
                         onClick={toggleDebate}
@@ -1898,11 +1900,22 @@ export default function RoomPage() {
                     </div>
                   </div>
 
+                  {isAdmin && (
+                    <div className="mt-4 flex items-center justify-end">
+                      <button className="flex items-center justify-center rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:text-white">
+                        <span className="inline-flex items-center gap-2">
+                          <HiSparkles className="h-5 w-5" />
+                          Generate
+                        </span>
+                      </button>
+                    </div>
+                  )}
+
                   <div className="mt-6 grid gap-3 overflow-y-auto pr-1">
                     {topics.map((topic, index) => (
                       <div
                         key={topic.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-black/10 px-4 py-4"
+                        className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#141419] px-4 py-4"
                         title={topic.title}
                         draggable={isAdmin}
                         onDragStart={(event) => {
@@ -1935,12 +1948,12 @@ export default function RoomPage() {
                                   event.target.value
                                 )
                               }
-                              className="w-full bg-transparent text-base font-semibold outline-none"
+                              className="w-full bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/40"
                               title={topic.title}
                             />
                           ) : (
                             <p
-                              className="text-base font-semibold"
+                              className="text-base font-semibold text-white"
                               title={topic.title}
                             >
                               {topic.title}
@@ -1949,32 +1962,35 @@ export default function RoomPage() {
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           {isAdmin ? (
-                            <select
-                              value={topic.minutes}
-                              onChange={(event) =>
-                                updateTopic(
-                                  topic.id,
-                                  "minutes",
-                                  event.target.value
-                                )
+                            <Select
+                              value={String(topic.minutes)}
+                              onValueChange={(value) =>
+                                updateTopic(topic.id, "minutes", value)
                               }
-                              className="rounded-md border border-black/10 px-3 py-1 pr-8 text-xs"
                             >
-                              {durationOptions.map((minutes) => (
-                                <option key={minutes} value={minutes}>
-                                  {minutes} min
-                                </option>
-                              ))}
-                            </select>
+                              <SelectTrigger className="h-9 w-[96px] rounded-xl px-3 text-xs">
+                                <SelectValue placeholder="Time" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {durationOptions.map((minutes) => (
+                                  <SelectItem
+                                    key={minutes}
+                                    value={String(minutes)}
+                                  >
+                                    {minutes} min
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : (
-                            <span className="text-xs text-black/50">
+                            <span className="text-xs text-white/50">
                               {topic.minutes} min
                             </span>
                           )}
                           {isAdmin && (
                             <div className="flex items-center gap-3 text-xs">
                               <button
-                                className="text-red-500"
+                                className="text-red-400 hover:text-red-300"
                                 onClick={() => {
                                   const confirmed = window.confirm(
                                     "Are you sure you want to delete this topic?"
@@ -1989,7 +2005,7 @@ export default function RoomPage() {
                                 <FiTrash2 className="h-4 w-4" />
                               </button>
                               <button
-                                className="cursor-grab text-black/40 active:cursor-grabbing"
+                                className="cursor-grab text-white/40 hover:text-white/60 active:cursor-grabbing"
                                 draggable
                                 onDragStart={() => setDragIndex(index)}
                                 onMouseDown={() => setDragIndex(index)}
@@ -2008,54 +2024,70 @@ export default function RoomPage() {
                     ))}
 
                     {isAdmin && (
-                      <div className="rounded-2xl border border-black/20 focus-within:border-black/60 px-4 py-3 transition">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <input
-                            value={newTopicTitle}
-                            onChange={(event) =>
-                              setNewTopicTitle(event.target.value)
+                      <div className="rounded-2xl border border-white/20 bg-[#141419] px-4 py-3 transition focus-within:border-white/40">
+                        <form
+                          className="grid gap-2"
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            if (!newTopicTitle.trim()) {
+                              return;
                             }
-                            placeholder="Create new topic"
-                            className="min-w-[180px] flex-1 bg-transparent text-sm outline-none"
-                          />
-                          <select
-                            value={newTopicMinutes}
-                            onChange={(event) =>
-                              setNewTopicMinutes(event.target.value)
-                            }
-                            className="rounded-full border border-black/10 px-2 py-1 text-xs"
-                          >
-                            {durationOptions.map((minutes) => (
-                              <option key={minutes} value={minutes}>
-                                {minutes} min
-                              </option>
-                            ))}
-                          </select>
-                          {newTopicTitle.trim().length > 0 && (
+                            addTopic();
+                          }}
+                        >
+                          <label className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                            New topic
+                          </label>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <input
+                              value={newTopicTitle}
+                              onChange={(event) =>
+                                setNewTopicTitle(event.target.value)
+                              }
+                              placeholder="e.g. Opening statements"
+                              className="min-w-[200px] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                              aria-label="Topic title"
+                            />
+                            <Select
+                              value={newTopicMinutes}
+                              onValueChange={setNewTopicMinutes}
+                            >
+                              <SelectTrigger className="h-9 rounded-full px-3 text-xs">
+                                <SelectValue placeholder="Time" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {durationOptions.map((minutes) => (
+                                  <SelectItem
+                                    key={minutes}
+                                    value={String(minutes)}
+                                  >
+                                    {minutes} min
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <button
-                              className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white"
-                              onClick={addTopic}
+                              type="submit"
+                              className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/40"
+                              disabled={!newTopicTitle.trim()}
                             >
                               Add topic
                             </button>
-                          )}
-                        </div>
+                          </div>
+                          <p className="text-xs text-white/40">
+                            Press Enter to add the topic.
+                          </p>
+                        </form>
                       </div>
                     )}
 
                     {isAdmin && (
                       <div className="flex items-center gap-3">
-                        <button className="flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#a855f7,#6366f1)] px-4 py-2 text-xs font-semibold text-white shadow-[0_12px_30px_rgba(99,102,241,0.35)]">
-                          <span className="inline-flex items-center gap-2">
-                            <HiSparkles className="h-4 w-4" />
-                            Generate
-                          </span>
-                        </button>
                         <button
-                          className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                          className={`rounded-lg px-5 py-2.5 text-base font-semibold ${
                             topicsDirty
-                              ? "bg-black text-white"
-                              : "bg-black/20 text-black/40"
+                              ? "bg-white text-black"
+                              : "bg-white/10 text-white/40"
                           }`}
                           disabled={!topicsDirty}
                           onClick={handleSaveTopics}
@@ -2071,30 +2103,32 @@ export default function RoomPage() {
               {activePanel === "chat" && (
                 <>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                       Chat
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold">Room chat</h2>
-                    <p className="mt-1 text-sm text-black/50">
+                    <h2 className="mt-2 text-2xl font-semibold text-white">
+                      Room chat
+                    </h2>
+                    <p className="mt-1 text-sm text-white/50">
                       Keep the conversation flowing.
                     </p>
                   </div>
                   <div className="mt-6 flex-1 space-y-3 overflow-y-auto pr-1">
                     {chatMessages.length === 0 ? (
-                      <p className="text-sm text-black/40">
+                      <p className="text-sm text-white/40">
                         No messages yet.
                       </p>
                     ) : (
                       chatMessages.map((message) => (
                         <div
                           key={message.id}
-                          className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"
+                          className="rounded-2xl border border-white/10 bg-[#15161a] px-4 py-3 text-sm"
                         >
-                          <div className="flex items-center justify-between text-xs text-black/40">
+                          <div className="flex items-center justify-between text-xs text-white/40">
                             <span>{message.author}</span>
                             <span>{message.timestamp}</span>
                           </div>
-                          <p className="mt-2 text-sm text-black/70">
+                          <p className="mt-2 text-sm text-white/70">
                             {message.message}
                           </p>
                         </div>
@@ -2106,10 +2140,10 @@ export default function RoomPage() {
                       value={chatInput}
                       onChange={(event) => setChatInput(event.target.value)}
                       placeholder="Send a message"
-                      className="flex-1 rounded-full border border-black/10 px-4 py-2 text-sm outline-none"
+                      className="flex-1 rounded-full border border-white/10 bg-[#141419] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40"
                     />
                     <button
-                      className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                      className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/90"
                       onClick={handleSendMessage}
                     >
                       Send
@@ -2121,17 +2155,17 @@ export default function RoomPage() {
               {activePanel === "notes" && (
                 <>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                       Notes
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold">Live notes</h2>
-                    <p className="mt-1 text-sm text-black/50">
+                    <p className="mt-1 text-sm text-white/50">
                       Capture highlights during the debate.
                     </p>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-2">
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center text-black/60 transition hover:text-black"
+                      className="inline-flex h-10 w-10 items-center justify-center text-white/60 transition hover:text-white"
                       onClick={() => notesEditor?.chain().focus().toggleBold().run()}
                       aria-label="Bold"
                       title="Bold"
@@ -2139,7 +2173,7 @@ export default function RoomPage() {
                       <span className="text-base font-bold">B</span>
                     </button>
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center text-black/60 transition hover:text-black"
+                      className="inline-flex h-10 w-10 items-center justify-center text-white/60 transition hover:text-white"
                       onClick={() => notesEditor?.chain().focus().toggleItalic().run()}
                       aria-label="Italic"
                       title="Italic"
@@ -2147,7 +2181,7 @@ export default function RoomPage() {
                       <span className="text-base italic">I</span>
                     </button>
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center text-black/60 transition hover:text-black"
+                      className="inline-flex h-10 w-10 items-center justify-center text-white/60 transition hover:text-white"
                       onClick={() =>
                         notesEditor?.chain().focus().toggleUnderline().run()
                       }
@@ -2157,7 +2191,7 @@ export default function RoomPage() {
                       <span className="text-base underline">U</span>
                     </button>
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center text-black/60 transition hover:text-black"
+                      className="inline-flex h-10 w-10 items-center justify-center text-white/60 transition hover:text-white"
                       onClick={() =>
                         notesEditor?.chain().focus().toggleTaskList().run()
                       }
@@ -2167,7 +2201,7 @@ export default function RoomPage() {
                       <FiCheckSquare className="h-5 w-5" />
                     </button>
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center text-black/60 transition hover:text-black"
+                      className="inline-flex h-10 w-10 items-center justify-center text-white/60 transition hover:text-white"
                       onClick={() =>
                         notesEditor?.chain().focus().setHardBreak().run()
                       }
@@ -2186,32 +2220,32 @@ export default function RoomPage() {
               {activePanel === "facts" && (
                 <>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                       Facts
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold">
                       Verify statements
                     </h2>
-                    <p className="mt-1 text-sm text-black/50">
+                    <p className="mt-1 text-sm text-white/50">
                       Add sourced facts for the room.
                     </p>
                   </div>
-                  <div className="mt-6 rounded-3xl border border-black/10 bg-[#f7f7f9] px-4 py-4">
+                  <div className="mt-6 rounded-3xl border border-white/10 bg-[#141419] px-4 py-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-sm font-semibold text-black">
+                        <p className="text-sm font-semibold text-white">
                           <span className="inline-flex items-center gap-2">
-                            <HiSparkles className="h-4 w-4 text-purple-500" />
+                            <HiSparkles className="h-4 w-4 text-purple-400" />
                             AI fact checks
                           </span>
                         </p>
-                        <p className="mt-1 text-xs text-black/50">
+                        <p className="mt-1 text-xs text-white/50">
                           Auto-collects sources from a mix of publications across
                           different universities.
                         </p>
                       </div>
                       <button
-                        className="flex h-6 w-11 items-center rounded-full border border-black/10 bg-black/5 p-1"
+                        className="flex h-6 w-11 items-center rounded-full border border-white/10 bg-white/10 p-1"
                         aria-label="Toggle AI fact checks"
                         type="button"
                       >
@@ -2224,23 +2258,23 @@ export default function RoomPage() {
                       value={factClaim}
                       onChange={(event) => setFactClaim(event.target.value)}
                       placeholder="Fact or claim"
-                      className="rounded-2xl border border-black/10 px-4 py-2 text-sm outline-none"
+                      className="rounded-2xl border border-white/10 bg-[#141419] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40"
                     />
                     <input
                       value={factSource}
                       onChange={(event) => setFactSource(event.target.value)}
                       placeholder="Source link"
-                      className="rounded-2xl border border-black/10 px-4 py-2 text-sm outline-none"
+                      className="rounded-2xl border border-white/10 bg-[#141419] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40"
                     />
                     <button
-                      className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                      className="rounded-lg bg-white px-4 py-2.5 text-base font-semibold text-black transition hover:bg-white/90"
                       onClick={handleAddFact}
                     >
                       <span className="inline-flex items-center gap-2">
                         <img
                           src="/facts.svg"
                           alt=""
-                          className="h-4 w-4 brightness-0 invert"
+                          className="h-5 w-5 brightness-0"
                         />
                         Add fact
                       </span>
@@ -2248,19 +2282,19 @@ export default function RoomPage() {
                   </div>
                   <div className="mt-6 space-y-3 overflow-y-auto pr-1">
                     {facts.length === 0 ? (
-                      <p className="text-sm text-black/40">
+                      <p className="text-sm text-white/40">
                         No facts added yet.
                       </p>
                     ) : (
                       facts.map((fact) => (
                         <div
                           key={fact.id}
-                          className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm"
+                          className="rounded-2xl border border-white/10 bg-[#141419] px-4 py-3 text-sm"
                         >
-                          <p className="text-sm text-black/70">
+                          <p className="text-sm text-white/70">
                             {fact.claim}
                           </p>
-                          <p className="mt-2 text-xs text-black/50">
+                          <p className="mt-2 text-xs text-white/50">
                             Submitted by {fact.submittedBy}
                           </p>
                           <a
@@ -2269,7 +2303,7 @@ export default function RoomPage() {
                                 ? fact.source
                                 : `https://${fact.source}`
                             }
-                            className="mt-2 inline-block text-xs font-semibold text-black/50 underline"
+                            className="mt-2 inline-block text-xs font-semibold text-white/50 underline"
                           >
                             <span className="inline-flex items-center gap-1">
                               Source
@@ -2286,38 +2320,38 @@ export default function RoomPage() {
               {activePanel === "stage" && (
                 <>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                       Stage
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold">
                       Manage speakers
                     </h2>
-                    <p className="mt-1 text-sm text-black/50">
+                    <p className="mt-1 text-sm text-white/50">
                       Move participants on stage and toggle access.
                     </p>
                     {isAdmin && (
-                      <div className="mt-4 rounded-2xl border border-black/10 bg-white px-4 py-3">
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-[#141419] px-4 py-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-semibold">Make public</p>
-                            <p className="mt-1 text-xs text-black/50">
+                            <p className="mt-1 text-xs text-white/50">
                               Anyone on the platform can see this debate and ask
                               to join.
                             </p>
-                            <p className="mt-1 text-xs text-black/40">
+                            <p className="mt-1 text-xs text-white/40">
                               If off, you can still share via a private link.
                             </p>
                           </div>
                           <button
                             className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
-                              isPublic ? "bg-emerald-500" : "bg-black/10"
+                              isPublic ? "bg-emerald-500" : "bg-white/10"
                             }`}
                             onClick={handleTogglePublic}
                             aria-pressed={isPublic}
                             type="button"
                           >
                             <span
-                              className={`h-5 w-5 rounded-full bg-white shadow transition ${
+                              className={`h-5 w-5 rounded-full bg-[#141419] shadow transition ${
                                 isPublic ? "translate-x-6" : "translate-x-1"
                               }`}
                             />
@@ -2327,7 +2361,7 @@ export default function RoomPage() {
                     )}
                     {!isAdmin && !canPublish && (
                       <button
-                        className="mt-4 rounded-full bg-black px-4 py-2 text-xs font-semibold text-white"
+                        className="mt-4 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90"
                         onClick={handleRequestJoin}
                       >
                         Request to join
@@ -2338,8 +2372,8 @@ export default function RoomPage() {
                     <button
                       className={`pb-2 font-semibold transition ${
                         stageTab === "debate"
-                          ? "border-b-2 border-black text-black"
-                          : "text-black/50 hover:text-black"
+                          ? "border-b-2 border-white/40 text-white"
+                          : "text-white/50 hover:text-white"
                       }`}
                       onClick={() => setStageTab("debate")}
                     >
@@ -2348,8 +2382,8 @@ export default function RoomPage() {
                     <button
                       className={`pb-2 font-semibold transition ${
                         stageTab === "invites"
-                          ? "border-b-2 border-black text-black"
-                          : "text-black/50 hover:text-black"
+                          ? "border-b-2 border-white/40 text-white"
+                          : "text-white/50 hover:text-white"
                       }`}
                       onClick={() => setStageTab("invites")}
                     >
@@ -2366,15 +2400,15 @@ export default function RoomPage() {
                   {stageTab === "invites" ? (
                     <div className="mt-6 space-y-3 overflow-y-auto pr-1">
                       {pendingRequests.length === 0 ? (
-                        <div className="rounded-2xl bg-black/5 px-4 py-4">
-                          <p className="text-sm font-semibold text-black">
+                        <div className="rounded-2xl bg-white/10 px-4 py-4">
+                          <p className="text-sm font-semibold text-white">
                             Invite users
                           </p>
-                          <p className="mt-1 text-xs text-black/50">
+                          <p className="mt-1 text-xs text-white/50">
                             Share the room link to bring speakers into the debate.
                           </p>
                           <button
-                            className="mt-3 inline-flex items-center gap-2 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white"
+                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-black transition hover:bg-white/90"
                             onClick={handleShareDebate}
                           >
                             <FiLink className="h-3.5 w-3.5" />
@@ -2385,19 +2419,19 @@ export default function RoomPage() {
                         pendingRequests.map((uid) => (
                           <div
                             key={uid}
-                            className="flex items-center justify-between rounded-2xl border border-black/10 px-4 py-3 text-sm"
+                            className="flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3 text-sm"
                           >
                             <div>
                               <p className="text-sm font-semibold">
                                 {participantNames[uid] ?? uid}
                               </p>
-                              <p className="text-xs text-black/40">
+                              <p className="text-xs text-white/40">
                                 Requesting to join
                               </p>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                               <button
-                                className="rounded-full border border-black/10 px-3 py-1 text-xs"
+                                className="rounded-full border border-white/10 px-3 py-1 text-xs"
                                 onClick={() =>
                                   setPendingRequests((prev) =>
                                     prev.filter((id) => id !== uid)
@@ -2407,7 +2441,7 @@ export default function RoomPage() {
                                 Reject
                               </button>
                               <button
-                                className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white"
+                                className="rounded-lg bg-white px-3 py-1 text-xs font-semibold text-black transition hover:bg-white/90"
                                 onClick={() => handleApproveJoin(uid)}
                               >
                                 Accept
@@ -2419,14 +2453,14 @@ export default function RoomPage() {
                     </div>
                   ) : (
                     <div className="mt-6 space-y-3 overflow-y-auto pr-1">
-                      <div className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs text-black/60">
+                      <div className="rounded-2xl border border-white/10 bg-[#141419] px-3 py-2 text-xs text-white/60">
                         <input
                           value={participantSearch}
                           onChange={(event) =>
                             setParticipantSearch(event.target.value)
                           }
                           placeholder="Search participants"
-                          className="w-full bg-transparent text-xs outline-none"
+                          className="w-full bg-transparent text-xs text-white outline-none placeholder:text-white/40"
                         />
                       </div>
                       {filteredParticipants.map((participant) => {
@@ -2438,8 +2472,8 @@ export default function RoomPage() {
                           key={participant.id}
                           className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${
                             onStage
-                              ? "border-black/20 bg-black/5"
-                              : "border-black/10"
+                              ? "border-white/20 bg-white/5"
+                              : "border-white/10"
                           }`}
                         >
                           <div className="flex min-w-[180px] items-center gap-3">
@@ -2450,7 +2484,7 @@ export default function RoomPage() {
                                 className="h-8 w-8 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-xs font-semibold text-black/60">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/60">
                                 {getInitials(participant.name)}
                               </div>
                             )}
@@ -2459,7 +2493,7 @@ export default function RoomPage() {
                                 {participant.name}
                                 {participant.isLocal ? " (you)" : ""}
                               </p>
-                              <p className="text-xs text-black/40">
+                              <p className="text-xs text-white/40">
                                 {onStage
                                   ? "On stage"
                                   : isApproved
@@ -2500,7 +2534,7 @@ export default function RoomPage() {
                             </button>
                             {isAdmin && !participant.isLocal && (
                               <button
-                                className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-black/60 transition hover:text-black"
+                                className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:text-white"
                                 onClick={() => handleMuteParticipant(participant.id)}
                                 aria-label="Mute participant"
                               >
@@ -2512,7 +2546,7 @@ export default function RoomPage() {
                             )}
                             {participant.isLocal && (
                               <button
-                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-black/60 transition hover:text-black ${
+                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:text-white ${
                                   micOn ? "" : "bg-red-100 text-red-600"
                                 }`}
                                 onClick={async () => {
@@ -2548,15 +2582,15 @@ export default function RoomPage() {
               <div className="text-center">
                 <div className="mx-auto mb-6 flex items-center justify-center gap-3">
                   <img src="/small-logo.svg" alt="Podium" className="h-10 w-10" />
-                  <span className="text-2xl font-semibold text-black">Podium</span>
+                  <span className="text-2xl font-semibold text-white">Podium</span>
                 </div>
-                <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                   Waiting room
                 </p>
-                <p className="mt-3 text-3xl font-semibold text-black">
+                <p className="mt-3 text-3xl font-semibold text-white">
                   Waiting for host approval
                 </p>
-                <p className="mt-2 text-sm text-black/50">
+                <p className="mt-2 text-sm text-white/50">
                   We’ve sent your request to join the stage.
                 </p>
               </div>
@@ -2576,16 +2610,16 @@ export default function RoomPage() {
               />
 
               <section className="relative mt-8">
-            <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-white">
+            <div className="relative overflow-hidden">
               <div className="flex h-full min-h-[420px] flex-col gap-4 p-6">
                 {mediaError && (
-                  <div className="rounded-3xl border border-dashed border-black/10 bg-[#f7f7f9] px-6 py-6 text-sm text-black/60">
+                  <div className="rounded-3xl border border-dashed border-white/10 bg-[#15161a] px-6 py-6 text-sm text-white/60">
                     <p className="text-sm font-semibold">
                       Camera or mic not available
                     </p>
-                    <p className="mt-2 text-xs text-black/50">{mediaError}</p>
+                    <p className="mt-2 text-xs text-white/50">{mediaError}</p>
                     <button
-                      className="mt-4 rounded-full bg-black px-4 py-2 text-xs font-semibold text-white"
+                      className="mt-4 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90"
                       onClick={handleRequestMedia}
                     >
                       Request access again
@@ -2593,18 +2627,18 @@ export default function RoomPage() {
                   </div>
                 )}
                 {isLoading && (
-                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-black/10 bg-[linear-gradient(135deg,#f1f1f1,#e7e7e7)]">
-                    <p className="text-sm text-black/50">Joining session…</p>
+                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-white/10 bg-[linear-gradient(135deg,#121214,#1a1a20)]">
+                    <p className="text-sm text-white/50">Joining session…</p>
                   </div>
                 )}
 
                 {!isLoading && agoraTokens && (
                   <div className="grid gap-6">
                     {running && activeTopic && (
-                      <div className="rounded-2xl border border-black/10 bg-white/80 px-5 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.12)] backdrop-blur">
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.12)] backdrop-blur">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-black/50">
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/50">
                               Plan {activeIndex !== null ? activeIndex + 1 : 1}/
                               {topics.length}
                             </p>
@@ -2617,7 +2651,7 @@ export default function RoomPage() {
                               {formatTime(remainingSeconds)}
                             </span>
                             <button
-                              className="rounded-full border border-black/10 px-4 py-1 text-xs font-semibold"
+                              className="rounded-full border border-white/10 px-4 py-1 text-xs font-semibold"
                               onClick={skipTopic}
                             >
                               Skip
@@ -2626,7 +2660,7 @@ export default function RoomPage() {
                         </div>
                       </div>
                     )}
-                    <div className="rounded-3xl bg-white/80 p-4">
+                    <div className="rounded-3xl p-4">
                       <div className="mt-1">
                         {stageVisibleParticipants.length > 0 ? (
                           <AgoraVideoGrid
@@ -2673,15 +2707,15 @@ export default function RoomPage() {
                             localAudioLevel={localAudioLevel}
                           />
                         ) : (
-                          <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-black/10 bg-[radial-gradient(circle_at_top,#ffffff,#f1f1f1)]">
+                          <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top,#1c1c22,#0f0f12)]">
                             <div className="text-center">
-                              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-black/10 bg-white shadow-[0_15px_35px_rgba(0,0,0,0.08)]">
-                                <FiUsers className="h-6 w-6 text-black/70" />
+                              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#141419] shadow-[0_15px_35px_rgba(0,0,0,0.08)]">
+                                <FiUsers className="h-6 w-6 text-white/70" />
                               </div>
-                              <p className="mt-4 text-2xl font-semibold text-black">
+                              <p className="mt-4 text-2xl font-semibold text-white">
                                 Stage is empty
                               </p>
-                              <p className="mt-2 text-sm text-black/50">
+                              <p className="mt-2 text-sm text-white/50">
                                 Add someone to the stage to start the debate.
                               </p>
                             </div>
@@ -2691,12 +2725,12 @@ export default function RoomPage() {
                     </div>
 
                     {isAdmin && (
-                      <div className="rounded-3xl bg-white/80 p-4">
+                      <div className="rounded-3xl p-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs uppercase tracking-[0.3em] text-black/40">
+                          <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                             Participants
                           </p>
-                          <span className="text-xs text-black/40">
+                          <span className="text-xs text-white/40">
                             {stageParticipants.length} total
                           </span>
                         </div>
@@ -2708,8 +2742,8 @@ export default function RoomPage() {
                                 key={participant.id}
                                 className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${
                                   onStage
-                                    ? "border-black/20 bg-black/5"
-                                    : "border-black/10 bg-white"
+                                    ? "border-white/20 bg-white/5"
+                                    : "border-white/10 bg-[#141419]"
                                 }`}
                               >
                                 <div className="flex min-w-[180px] items-center gap-3">
@@ -2720,7 +2754,7 @@ export default function RoomPage() {
                                       className="h-8 w-8 rounded-full object-cover"
                                     />
                                   ) : (
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-xs font-semibold text-black/60">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/60">
                                       {getInitials(participant.name)}
                                     </div>
                                   )}
@@ -2729,7 +2763,7 @@ export default function RoomPage() {
                                       {participant.name}
                                       {participant.isLocal ? " (you)" : ""}
                                     </p>
-                                    <p className="text-xs text-black/40">
+                                    <p className="text-xs text-white/40">
                                       {onStage ? "On stage" : "Audience"}
                                     </p>
                                   </div>
@@ -2760,7 +2794,7 @@ export default function RoomPage() {
                                     </span>
                                   </button>
                                   <button
-                                    className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-black/60 transition hover:text-black"
+                                    className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:text-white"
                                     onClick={() => handleMuteParticipant(participant.id)}
                                     aria-label="Mute participant"
                                   >
@@ -2781,11 +2815,11 @@ export default function RoomPage() {
                 )}
 
                 {!isLoading && !agoraTokens && (
-                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-black/10 bg-[linear-gradient(135deg,#f1f1f1,#e7e7e7)]">
+                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-white/10 bg-[linear-gradient(135deg,#121214,#1a1a20)]">
                     <div className="text-center">
                       <p className="text-sm font-semibold">Session unavailable</p>
                       <button
-                        className="mt-3 rounded-full bg-black px-4 py-2 text-xs font-semibold text-white"
+                        className="mt-3 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90"
                         onClick={() => window.location.reload()}
                       >
                         Rejoin

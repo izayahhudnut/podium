@@ -1,11 +1,28 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiCopy, FiMoreHorizontal, FiPlus, FiSearch } from "react-icons/fi";
+import {
+  FiCopy,
+  FiInfo,
+  FiMoreHorizontal,
+  FiPlus,
+  FiSearch,
+  FiTrash,
+} from "react-icons/fi";
 import AppSidebar from "../components/AppSidebar";
 import AppTopbar from "../components/AppTopbar";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@clerk/nextjs";
 
 const defaultHeaderImages = [
@@ -52,9 +69,20 @@ type TopicTemplate = {
   topics: { id: string; title: string; minutes: number }[];
 };
 
-export default function RoomsPage() {
-  const router = useRouter();
+function SearchParamsHandler({ onCreateParam }: { onCreateParam: (value: boolean) => void }) {
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      onCreateParam(true);
+    }
+  }, [searchParams, onCreateParam]);
+
+  return null;
+}
+
+function RoomsPageContent() {
+  const router = useRouter();
   const { user } = useUser();
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -115,11 +143,6 @@ export default function RoomsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (searchParams.get("create") === "1") {
-      setShowModal(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (!showModal || headerImageUrl) {
@@ -275,28 +298,40 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f6f4] text-[#1f1c17]">
+    <div className="min-h-screen bg-[#0b0b0c] text-white">
+      <Suspense fallback={null}>
+        <SearchParamsHandler onCreateParam={setShowModal} />
+      </Suspense>
       <div className="flex min-h-screen">
         <AppSidebar />
-        <main className="flex-1 px-6 py-6 lg:px-10">
+        <main className="flex-1 px-8 py-6 lg:px-14">
           <AppTopbar />
 
           <section className="mt-10">
-            <h1 className="text-3xl font-semibold">Rooms</h1>
-            <div className="mt-6 rounded-3xl bg-white px-6 py-5 text-sm text-black/60 shadow-[0_20px_60px_rgba(15,15,15,0.06)]">
-              Here you can view the rooms you’ve created, rooms you’ve been
-              invited to, and past debates that have been archived.
+            <h1 className="text-3xl font-semibold text-white">Rooms</h1>
+            <div className="mt-6 flex items-start gap-2 rounded-2xl border border-white/10 bg-[#141419] px-6 py-5 text-sm text-white/60 shadow-[0_14px_40px_rgba(0,0,0,0.4)]">
+              <button
+                type="button"
+                className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:text-white"
+                title="Rooms let you create structured debates with topics and participants."
+                aria-label="Room info"
+              >
+                <FiInfo className="h-4 w-4" />
+              </button>
+              <span className="leading-6">
+                Creating a room starts a debate where people can join, you can
+                add topics, and keep the conversation structured.
+              </span>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex gap-6 text-sm text-black/40">
-                <button className="border-b-2 border-black pb-2 text-black">
+              <div className="flex gap-6 text-sm text-white/50">
+                <button className="border-b-2 border-white/40 pb-2 text-white">
                   My rooms
                 </button>
-                <button className="pb-2">Shared with me</button>
               </div>
               <button
-                className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-transparent px-4 py-2 text-sm font-medium text-white transition hover:bg-white/5"
                 onClick={() => setShowModal(true)}
               >
                 <FiPlus className="h-4 w-4" />
@@ -305,45 +340,42 @@ export default function RoomsPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm">
-                <FiSearch className="h-4 w-4 text-black/40" aria-hidden />
+              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#141419] px-4 py-2 text-sm">
+                <FiSearch className="h-4 w-4 text-white/40" aria-hidden />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search"
-                  className="bg-transparent text-sm outline-none"
+                  className="bg-transparent text-sm text-white outline-none placeholder:text-white/40"
                 />
               </div>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              {isLoading && (
-                <div className="flex flex-wrap gap-3">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div
-                      key={`skeleton-${index}`}
-                      className="w-full max-w-[360px] overflow-hidden rounded-3xl border border-black/10 bg-white"
-                    >
-                      <div className="relative h-36 animate-pulse bg-black/5">
-                        <div className="absolute right-3 top-3 h-9 w-9 rounded-full bg-black/10" />
-                      </div>
-                      <div className="px-4 pb-4 pt-4">
-                        <div className="h-4 w-44 animate-pulse rounded-full bg-black/5" />
-                        <div className="mt-3 h-3 w-28 animate-pulse rounded-full bg-black/5" />
-                      </div>
+              {isLoading &&
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={`skeleton-${index}`}
+                    className="w-full max-w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-[#141419]"
+                  >
+                    <div className="relative h-36 bg-[#1b1b20]">
+                      <Skeleton className="h-full w-full rounded-none" />
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="px-4 pb-4 pt-4">
+                      <Skeleton className="h-5 w-48 rounded-full" />
+                      <Skeleton className="mt-2 h-4 w-28 rounded-full" />
+                    </div>
+                  </div>
+                ))}
               {filteredRooms.map((room) => (
                 <article
                   key={room.id}
-                  className="group w-full max-w-[360px] cursor-pointer overflow-hidden rounded-3xl border border-black/10 bg-white transition hover:-translate-y-1 hover:border-black/20 hover:shadow-[0_18px_40px_rgba(0,0,0,0.12)]"
+                  className="group w-full max-w-[360px] cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-[#141419] transition hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_18px_40px_rgba(0,0,0,0.5)]"
                   onClick={() =>
                     router.push(`/${room.owner_username}/${room.slug}`)
                   }
                 >
-                  <div className="relative h-36 bg-[#f2f2f2]">
+                  <div className="relative h-36 bg-[#1b1b20]">
                     {room.header_image_url ? (
                       <img
                         src={room.header_image_url}
@@ -352,12 +384,16 @@ export default function RoomsPage() {
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <img src="/globe.svg" alt="" className="h-16 w-16" />
+                        <img
+                          src="/globe.svg"
+                          alt=""
+                          className="h-16 w-16 opacity-70"
+                        />
                       </div>
                     )}
                     <div className="absolute right-3 top-3">
                       <button
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white/90 text-black/50 transition hover:bg-white"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#1b1b20] text-white/50 transition hover:bg-[#23232a] hover:text-white"
                         onClick={(event) => {
                           event.stopPropagation();
                           setMenuOpenForId((prev) =>
@@ -370,11 +406,11 @@ export default function RoomsPage() {
                       </button>
                       {menuOpenForId === room.id && (
                         <div
-                          className="absolute right-0 top-10 z-10 w-44 rounded-2xl border border-black/10 bg-white p-2 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]"
+                          className="absolute right-0 top-10 z-10 w-44 rounded-2xl border border-white/10 bg-[#141419] p-2 text-xs shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
                           onClick={(event) => event.stopPropagation()}
                         >
                           <button
-                            className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-red-600 transition hover:bg-red-50"
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-red-400 transition hover:bg-red-500/10"
                             onClick={(event) => {
                               event.stopPropagation();
                               handleDeleteRoom(
@@ -384,6 +420,7 @@ export default function RoomsPage() {
                               );
                             }}
                           >
+                            <FiTrash className="h-4 w-4" aria-hidden />
                             Delete room
                           </button>
                         </div>
@@ -391,8 +428,10 @@ export default function RoomsPage() {
                     </div>
                   </div>
                   <div className="px-4 pb-4 pt-4">
-                    <p className="text-lg font-semibold">{room.title}</p>
-                    <p className="mt-2 text-sm text-black/50">
+                    <p className="text-lg font-semibold text-white">
+                      {room.title}
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
                       {new Intl.DateTimeFormat("en-US", {
                         month: "short",
                         day: "numeric",
@@ -403,7 +442,7 @@ export default function RoomsPage() {
                 </article>
               ))}
               {!isLoading && filteredRooms.length === 0 && (
-                <div className="rounded-3xl border border-dashed border-black/10 bg-white px-6 py-10 text-center text-sm text-black/50">
+                <div className="rounded-3xl border border-dashed border-white/10 bg-[#141419] px-6 py-10 text-center text-sm text-white/50">
                   No sessions yet. Create your first room to see it here.
                 </div>
               )}
@@ -412,137 +451,160 @@ export default function RoomsPage() {
         </main>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-[#f7f6f4] shadow-[0_30px_80px_rgba(0,0,0,0.25)]">
-            <div className="relative h-40 border-b border-black/10 bg-[#f2f2f2]">
-              {headerImageUrl && (
-                <img
-                  src={headerImageUrl}
-                  alt="Debate header"
-                  className="h-full w-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-black/20" />
-              <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-black">
-                Upload header
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) {
-                      return;
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/10 bg-[#121214] p-0">
+          <div className="relative h-40 border-b border-white/10 bg-[#1b1b20]">
+            {headerImageUrl && (
+              <img
+                src={headerImageUrl}
+                alt="Debate header"
+                className="h-full w-full object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/20" />
+            <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+              Upload header
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) {
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    if (typeof reader.result === "string") {
+                      setHeaderImageUrl(reader.result);
                     }
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      if (typeof reader.result === "string") {
-                        setHeaderImageUrl(reader.result);
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }}
+                  };
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+          </div>
+          <div className="p-6">
+            <p className="text-lg font-semibold text-white">Create room</p>
+            <p className="mt-1 text-sm text-white/50">
+              Set the basics and open a new debate.
+            </p>
+
+            <div className="mt-6 grid gap-5">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                  Room name
+                </label>
+                <input
+                  value={roomName}
+                  onChange={(event) => setRoomName(event.target.value)}
+                  placeholder="Add a room title"
+                  className="w-full rounded-2xl border border-white/10 bg-[#141419] px-4 py-3 text-sm text-white outline-none transition focus:border-white/30 placeholder:text-white/40"
                 />
-              </label>
-            </div>
-            <div className="p-6">
-              <p className="text-3xl text-black/30">Room name</p>
-              <div className="mt-4 flex items-center rounded-2xl border border-black/10 bg-[#f7f6f4] px-3 py-1 text-sm">
-              <span className="text-black/50">
-                https://join.podium.com/{ownerUsername}/
-              </span>
-              <input
-                value={slug}
-                readOnly
-                className="w-full bg-transparent text-sm outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                disabled={!slug}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-black/60 transition hover:bg-black/5 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Copy room link"
-              >
-                <FiCopy />
-              </button>
-              </div>
-              <input
-                value={roomName}
-                onChange={(event) => setRoomName(event.target.value)}
-                placeholder="Room name"
-                className="mt-4 w-full rounded-2xl border border-black/10 bg-white px-4 py-2 text-sm outline-none"
-              />
-
-              <div className="mt-4">
-                <p className="text-sm font-semibold">Topics</p>
-                <select
-                  value={templateId}
-                  onChange={(event) => setTemplateId(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-3 py-2 pr-10 text-sm"
-                  disabled={templatesLoading}
-                >
-                  <option value="">
-                    {templatesLoading ? "Loading templates..." : "No template"}
-                  </option>
-                  {topicTemplates.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.title}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-xs text-black/40">
-                  Create templates in the Topics tab to reuse them here.
-                </p>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-black/10 bg-white px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Make public</p>
-                    <p className="mt-1 text-xs text-black/50">
-                      Anyone on the platform can see this debate and ask to join.
-                    </p>
-                    <p className="mt-1 text-xs text-black/40">
-                      If off, you can still share via a private link.
-                    </p>
-                  </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                  Share link
+                </label>
+                <div className="flex items-center rounded-2xl border border-white/10 bg-[#15161a] px-3 py-2 text-sm">
+                  <span className="text-white/50">
+                    https://join.podium.com/{ownerUsername}/
+                  </span>
+                  <input
+                    value={slug}
+                    readOnly
+                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                  />
                   <button
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
-                      isPublic ? "bg-emerald-500" : "bg-black/10"
-                    }`}
-                    onClick={() => setIsPublic((prev) => !prev)}
-                    aria-pressed={isPublic}
                     type="button"
+                    onClick={handleCopyLink}
+                    disabled={!slug}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Copy room link"
                   >
-                    <span
-                      className={`h-5 w-5 rounded-full bg-white shadow transition ${
-                        isPublic ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
+                    <FiCopy />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-end gap-3">
-                <button
-                  className="rounded-full px-4 py-2 text-sm font-semibold text-black/60"
-                  onClick={() => setShowModal(false)}
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                  Topics template
+                </label>
+                <Select
+                  value={templateId || "none"}
+                  onValueChange={(value) =>
+                    setTemplateId(value === "none" ? "" : value)
+                  }
+                  disabled={templatesLoading}
                 >
-                  Cancel
-                </button>
-                <button
-                  className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
-                  onClick={handleCreateRoom}
-                  disabled={isCreating}
-                >
-                  {isCreating ? "Creating..." : "Create room"}
-                </button>
+                  <SelectTrigger>
+                    <SelectValue
+                      className="truncate"
+                      placeholder={
+                        templatesLoading ? "Loading templates..." : "No template"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No template</SelectItem>
+                    {topicTemplates.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-white/40">
+                  Create templates in the Topics tab to reuse them here.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-[#141419] px-4 py-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      Make public
+                    </p>
+                    <p className="mt-1 text-xs text-white/50">
+                      Anyone on the platform can see this debate and ask to join.
+                    </p>
+                    <p className="mt-1 text-xs text-white/40">
+                      If off, you can still share via a private link.
+                    </p>
+                  </div>
+                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                </div>
               </div>
             </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                className="rounded-full px-4 py-2 text-sm font-semibold text-white/60"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/90"
+                onClick={handleCreateRoom}
+                disabled={isCreating}
+              >
+                {isCreating ? "Creating..." : "Create room"}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+export default function RoomsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0b0b0c]" />}>
+      <RoomsPageContent />
+    </Suspense>
   );
 }

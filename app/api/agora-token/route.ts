@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, getAuth } from "@clerk/nextjs/server";
 import { RtcTokenBuilder, RtcRole, RtmTokenBuilder } from "agora-token";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const { userId } = auth();
+export async function GET(request: NextRequest) {
+  const { userId } = await auth();
   const fallback = getAuth(request);
   const resolvedUserId = userId ?? fallback.userId;
 

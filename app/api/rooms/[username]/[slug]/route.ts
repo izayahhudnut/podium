@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, getAuth } from "@clerk/nextjs/server";
 import {
   deleteRoom,
@@ -13,7 +13,7 @@ type RouteContext = {
   params: Promise<{ username?: string; slug?: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   const { username, slug } = await context.params;
   if (!username || !slug) {
     return NextResponse.json(
@@ -30,13 +30,13 @@ export async function GET(_request: Request, context: RouteContext) {
   return NextResponse.json({ room });
 }
 
-export async function PATCH(request: Request, context: RouteContext) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
   if (!slug) {
     return NextResponse.json({ error: "Missing slug" }, { status: 400 });
   }
 
-  const { userId } = auth();
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
   if (!resolvedUserId) {
@@ -69,13 +69,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   return NextResponse.json({ room });
 }
 
-export async function DELETE(request: Request, context: RouteContext) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
   if (!slug) {
     return NextResponse.json({ error: "Missing slug" }, { status: 400 });
   }
 
-  const { userId } = auth();
+  const { userId } = await auth();
   const fallbackAuth = getAuth(request);
   const resolvedUserId = userId ?? fallbackAuth.userId;
   if (!resolvedUserId) {
