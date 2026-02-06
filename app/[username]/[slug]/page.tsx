@@ -798,7 +798,7 @@ export default function RoomPage() {
     let camTrack: ICameraVideoTrack | null = null;
     let rtcModule: any = null;
     let client: IAgoraRTCClient | null = null;
-    let retryTimer: ReturnType<typeof window.setTimeout> | null = null;
+    let retryTimer: number | null = null;
 
     const handleUserPublished = async (
       user: IAgoraRTCRemoteUser,
