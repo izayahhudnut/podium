@@ -19,7 +19,7 @@ export default function AppTopbar() {
       <div className="flex items-center gap-3" />
       <div className="flex flex-wrap items-center gap-3">
         <RainbowButton
-          className="animate-none rounded-lg border border-white/10 bg-white text-black shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
+          className="animate-none rounded-full border border-white/10 bg-white text-black shadow-[0_4px_10px_rgba(0,0,0,0.12)]"
           onClick={() => router.push("/rooms?create=1")}
         >
           <HiOutlineSpeakerphone className="h-4 w-4" />
@@ -41,7 +41,7 @@ export default function AppTopbar() {
           <UserButton
             appearance={{
               elements: {
-                avatarBox: "h-12 w-12",
+                avatarBox: "h-14 w-14",
               },
             }}
           />

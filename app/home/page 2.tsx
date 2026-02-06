@@ -24,7 +24,7 @@ export default async function HomePage() {
             <div className="rounded-2xl border border-black/5 bg-transparent p-6 shadow-none">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-3xl font-semibold">Welcome to Podium</p>
+                  <p className="text-2xl">Welcome to Podium</p>
                   <p className="mt-2 max-w-2xl text-sm text-black/50">
                     To help you run clear, structured debates. Watch the
                     short tutorial or dive into your first session.

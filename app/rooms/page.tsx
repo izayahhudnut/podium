@@ -41,6 +41,9 @@ const defaultHeaderImages = [
   "/Rectangle%20(12).jpg",
 ];
 
+const HEADER_MAX_DIMENSION = 1600;
+const HEADER_MAX_BYTES = 380_000;
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -49,6 +52,72 @@ function slugify(value: string) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .slice(0, 40);
+}
+
+async function fileToCompressedDataUrl(file: File): Promise<string> {
+  const loadImage = () =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Unable to load image"));
+      };
+      image.src = objectUrl;
+    });
+
+  const image = await loadImage();
+  const longestSide = Math.max(image.width, image.height);
+  const scale = longestSide > HEADER_MAX_DIMENSION ? HEADER_MAX_DIMENSION / longestSide : 1;
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Unable to prepare image");
+  }
+  context.drawImage(image, 0, 0, width, height);
+
+  const exportWithQuality = (quality: number) =>
+    new Promise<string>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Unable to compress image"));
+            return;
+          }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (typeof reader.result === "string") {
+              resolve(reader.result);
+              return;
+            }
+            reject(new Error("Unable to read compressed image"));
+          };
+          reader.onerror = () => reject(new Error("Unable to read image"));
+          reader.readAsDataURL(blob);
+        },
+        "image/jpeg",
+        quality
+      );
+    });
+
+  const qualities = [0.82, 0.72, 0.62, 0.52];
+  for (const quality of qualities) {
+    const compressed = await exportWithQuality(quality);
+    if (compressed.length <= HEADER_MAX_BYTES) {
+      return compressed;
+    }
+  }
+
+  return exportWithQuality(0.45);
 }
 
 type Room = {
@@ -94,6 +163,7 @@ function RoomsPageContent() {
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState("");
+  const [isProcessingHeader, setIsProcessingHeader] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [menuOpenForId, setMenuOpenForId] = useState<string | null>(null);
@@ -215,12 +285,37 @@ function RoomsPageContent() {
         }),
       });
 
-      if (response.status === 401) {
+      let finalResponse = response;
+      if (!response.ok && resolvedHeader.startsWith("data:image/")) {
+        finalResponse = await fetch("/api/rooms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            title: roomName.trim(),
+            slug: newSlug,
+            template: templateId || null,
+            is_public: isPublic,
+            header_image_url:
+              defaultHeaderImages[
+                Math.floor(Math.random() * defaultHeaderImages.length)
+              ],
+          }),
+        });
+        if (finalResponse.ok) {
+          toast({
+            title: "Header image skipped",
+            description: "Room created with a default header image.",
+          });
+        }
+      }
+
+      if (finalResponse.status === 401) {
         router.push("/");
         return;
       }
 
-      if (response.status === 409) {
+      if (finalResponse.status === 409) {
         toast({
           title: "Room already exists",
           description: "Try a different name.",
@@ -228,11 +323,11 @@ function RoomsPageContent() {
         return;
       }
 
-      if (!response.ok) {
+      if (!finalResponse.ok) {
         throw new Error("Failed to create room");
       }
 
-      const data = await response.json();
+      const data = await finalResponse.json();
       const createdRoom = data.room as Room;
       setRooms((prev) => [createdRoom, ...prev]);
       setRoomName("");
@@ -298,7 +393,7 @@ function RoomsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0c] text-white">
+    <div className="min-h-screen bg-white text-[#111111]">
       <Suspense fallback={null}>
         <SearchParamsHandler onCreateParam={setShowModal} />
       </Suspense>
@@ -308,11 +403,11 @@ function RoomsPageContent() {
           <AppTopbar />
 
           <section className="mt-10">
-            <h1 className="text-3xl font-semibold text-white">Rooms</h1>
-            <div className="mt-6 flex items-start gap-2 rounded-2xl border border-white/10 bg-[#141419] px-6 py-5 text-sm text-white/60 shadow-[0_14px_40px_rgba(0,0,0,0.4)]">
+            <h1 className="text-3xl font-semibold text-[#111111]">Rooms</h1>
+            <div className="flex items-center gap-2 rounded-2xl pr-6 py-5 text-left text-sm text-[#111111]/60">
               <button
                 type="button"
-                className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 text-white/50 transition hover:text-white"
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#ECECEC] text-[#111111]/50 transition hover:text-[#111111]"
                 title="Rooms let you create structured debates with topics and participants."
                 aria-label="Room info"
               >
@@ -325,13 +420,13 @@ function RoomsPageContent() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex gap-6 text-sm text-white/50">
-                <button className="border-b-2 border-white/40 pb-2 text-white">
+              <div className="flex gap-6 text-sm text-[#111111]/50">
+                <button className="border-b-2 border-[#dcdcdc] pb-2 text-[#111111]">
                   My rooms
                 </button>
               </div>
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-transparent px-4 py-2 text-sm font-medium text-white transition hover:bg-white/5"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#dcdcdc] bg-transparent px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#ECECEC]"
                 onClick={() => setShowModal(true)}
               >
                 <FiPlus className="h-4 w-4" />
@@ -340,13 +435,13 @@ function RoomsPageContent() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#141419] px-4 py-2 text-sm">
-                <FiSearch className="h-4 w-4 text-white/40" aria-hidden />
+              <div className="flex items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-sm">
+                <FiSearch className="h-4 w-4 text-[#111111]/40" aria-hidden />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search"
-                  className="bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                  className="bg-transparent text-sm text-[#111111] outline-none placeholder:text-[#111111]/40"
                 />
               </div>
             </div>
@@ -356,9 +451,9 @@ function RoomsPageContent() {
                 Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={`skeleton-${index}`}
-                    className="w-full max-w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-[#141419]"
+                    className="w-full max-w-[360px] overflow-hidden rounded-xl border border-[#ECECEC] bg-white"
                   >
-                    <div className="relative h-36 bg-[#1b1b20]">
+                    <div className="relative h-36 bg-[#F8F8F8]">
                       <Skeleton className="h-full w-full rounded-none" />
                     </div>
                     <div className="px-4 pb-4 pt-4">
@@ -370,12 +465,12 @@ function RoomsPageContent() {
               {filteredRooms.map((room) => (
                 <article
                   key={room.id}
-                  className="group w-full max-w-[360px] cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-[#141419] transition hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_18px_40px_rgba(0,0,0,0.5)]"
+                  className="group w-full max-w-[360px] cursor-pointer overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
                   onClick={() =>
                     router.push(`/${room.owner_username}/${room.slug}`)
                   }
                 >
-                  <div className="relative h-36 bg-[#1b1b20]">
+                  <div className="relative h-36 bg-[#F8F8F8]">
                     {room.header_image_url ? (
                       <img
                         src={room.header_image_url}
@@ -393,7 +488,7 @@ function RoomsPageContent() {
                     )}
                     <div className="absolute right-3 top-3">
                       <button
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#1b1b20] text-white/50 transition hover:bg-[#23232a] hover:text-white"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ECECEC] bg-[#F8F8F8] text-[#111111]/50 transition hover:bg-[#ECECEC] hover:text-[#111111]"
                         onClick={(event) => {
                           event.stopPropagation();
                           setMenuOpenForId((prev) =>
@@ -406,7 +501,7 @@ function RoomsPageContent() {
                       </button>
                       {menuOpenForId === room.id && (
                         <div
-                          className="absolute right-0 top-10 z-10 w-44 rounded-2xl border border-white/10 bg-[#141419] p-2 text-xs shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
+                          className="absolute right-0 top-10 z-10 w-44 rounded-2xl border border-[#ECECEC] bg-white p-2 text-xs shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
                           onClick={(event) => event.stopPropagation()}
                         >
                           <button
@@ -428,10 +523,10 @@ function RoomsPageContent() {
                     </div>
                   </div>
                   <div className="px-4 pb-4 pt-4">
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-semibold text-[#111111]">
                       {room.title}
                     </p>
-                    <p className="mt-2 text-sm text-white/50">
+                    <p className="mt-2 text-sm text-[#111111]/50">
                       {new Intl.DateTimeFormat("en-US", {
                         month: "short",
                         day: "numeric",
@@ -442,7 +537,7 @@ function RoomsPageContent() {
                 </article>
               ))}
               {!isLoading && filteredRooms.length === 0 && (
-                <div className="rounded-3xl border border-dashed border-white/10 bg-[#141419] px-6 py-10 text-center text-sm text-white/50">
+                <div className="rounded-xl border border-dashed border-[#ECECEC] bg-white px-6 py-10 text-center text-sm text-[#111111]/50">
                   No sessions yet. Create your first room to see it here.
                 </div>
               )}
@@ -452,8 +547,8 @@ function RoomsPageContent() {
       </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/10 bg-[#121214] p-0">
-          <div className="relative h-40 border-b border-white/10 bg-[#1b1b20]">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-[28px] border border-[#ECECEC] bg-white p-0">
+          <div className="relative h-40 border-b border-[#ECECEC] bg-[#F8F8F8]">
             {headerImageUrl && (
               <img
                 src={headerImageUrl}
@@ -462,65 +557,71 @@ function RoomsPageContent() {
               />
             )}
             <div className="absolute inset-0 bg-black/20" />
-            <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+            <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-[#111111] backdrop-blur">
               Upload header
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(event) => {
+                onChange={async (event) => {
                   const file = event.target.files?.[0];
                   if (!file) {
                     return;
                   }
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    if (typeof reader.result === "string") {
-                      setHeaderImageUrl(reader.result);
-                    }
-                  };
-                  reader.readAsDataURL(file);
+                  setIsProcessingHeader(true);
+                  try {
+                    const compressed = await fileToCompressedDataUrl(file);
+                    setHeaderImageUrl(compressed);
+                  } catch {
+                    toast({
+                      title: "Upload failed",
+                      description: "Please try a different image.",
+                    });
+                  } finally {
+                    setIsProcessingHeader(false);
+                    event.currentTarget.value = "";
+                  }
                 }}
               />
             </label>
           </div>
           <div className="p-6">
-            <p className="text-lg font-semibold text-white">Create room</p>
-            <p className="mt-1 text-sm text-white/50">
+            <p className="text-lg font-semibold text-[#111111]">Create room</p>
+            <p className="mt-1 text-sm text-[#111111]/50">
               Set the basics and open a new debate.
             </p>
 
             <div className="mt-6 grid gap-5">
               <div className="grid gap-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]/40">
                   Room name
                 </label>
                 <input
                   value={roomName}
                   onChange={(event) => setRoomName(event.target.value)}
                   placeholder="Add a room title"
-                  className="w-full rounded-2xl border border-white/10 bg-[#141419] px-4 py-3 text-sm text-white outline-none transition focus:border-white/30 placeholder:text-white/40"
+                  className="w-full rounded-2xl border border-[#ECECEC] bg-white px-4 py-3 text-sm text-[#111111] outline-none transition focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
                 />
               </div>
 
               <div className="grid gap-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]/40">
                   Share link
                 </label>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-[#15161a] px-3 py-2 text-sm">
-                  <span className="text-white/50">
+                <div className="flex items-center rounded-2xl border border-[#ECECEC] bg-[#F8F8F8] px-3 py-2 text-sm">
+                  <span className="text-[#111111]/50">
                     https://join.podium.com/{ownerUsername}/
                   </span>
                   <input
                     value={slug}
                     readOnly
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                    className="w-full bg-transparent text-sm text-[#111111] outline-none placeholder:text-[#111111]/40"
                   />
                   <button
                     type="button"
                     onClick={handleCopyLink}
                     disabled={!slug}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#111111]/60 transition hover:bg-[#ECECEC] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Copy room link"
                   >
                     <FiCopy />
@@ -529,7 +630,7 @@ function RoomsPageContent() {
               </div>
 
               <div className="grid gap-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]/40">
                   Topics template
                 </label>
                 <Select
@@ -556,21 +657,21 @@ function RoomsPageContent() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-[#111111]/40">
                   Create templates in the Topics tab to reuse them here.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#141419] px-4 py-3">
+              <div className="rounded-2xl border border-[#ECECEC] bg-white px-4 py-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-[#111111]">
                       Make public
                     </p>
-                    <p className="mt-1 text-xs text-white/50">
+                    <p className="mt-1 text-xs text-[#111111]/50">
                       Anyone on the platform can see this debate and ask to join.
                     </p>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-[#111111]/40">
                       If off, you can still share via a private link.
                     </p>
                   </div>
@@ -581,17 +682,21 @@ function RoomsPageContent() {
 
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                className="rounded-full px-4 py-2 text-sm font-semibold text-white/60"
+                className="rounded-full px-4 py-2 text-sm font-semibold text-[#111111]/60"
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
               <button
-                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/90"
+                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#111111] transition hover:bg-[#ECECEC]"
                 onClick={handleCreateRoom}
-                disabled={isCreating}
+                disabled={isCreating || isProcessingHeader}
               >
-                {isCreating ? "Creating..." : "Create room"}
+                {isProcessingHeader
+                  ? "Processing image..."
+                  : isCreating
+                    ? "Creating..."
+                    : "Create room"}
               </button>
             </div>
           </div>
@@ -603,7 +708,7 @@ function RoomsPageContent() {
 
 export default function RoomsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0b0b0c]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <RoomsPageContent />
     </Suspense>
   );

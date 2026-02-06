@@ -29,12 +29,12 @@ export default function AuthHeader() {
   return (
     <header className="flex items-center justify-end gap-4 px-6 py-4 text-sm">
       <SignedOut>
-        <SignInButton>
+        <SignInButton mode="redirect">
           <button className="rounded-full border border-[var(--line)] px-4 py-2 font-semibold text-[var(--ink)]">
             Sign in
           </button>
         </SignInButton>
-        <SignUpButton>
+        <SignUpButton mode="redirect">
           <button className="rounded-full bg-[var(--ink)] px-4 py-2 font-semibold text-[var(--sand)]">
             Sign up
           </button>

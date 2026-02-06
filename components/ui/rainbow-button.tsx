@@ -35,7 +35,7 @@ export function RainbowButton({
     >
       <span
         className={cn(
-          "inline-flex w-full items-center justify-center gap-2 rounded-[10px] font-semibold",
+          "inline-flex w-full items-center justify-center gap-2 rounded-[inherit] font-semibold",
           variant === "outline"
             ? "border border-black/10 bg-white text-black"
             : "bg-[#101A25] text-white shadow-[0_12px_24px_rgba(16,26,37,0.25)]",

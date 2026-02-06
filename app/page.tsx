@@ -338,9 +338,9 @@ const LandingPage = async () => {
       </MaxWidthWrapper>
 
       {/* CTA Section */}
-      <MaxWidthWrapper className="mt-20 max-w-[100vw] overflow-x-hidden scrollbar-hide">
+      <MaxWidthWrapper className="mt-20 max-w-[100vw] overflow-x-hidden">
         <AnimationContainer delay={0.1}>
-          <LampContainer>
+          <LampContainer className="min-h-[560px]">
             <div className="flex flex-col items-center justify-center relative w-full text-center">
               <h2 className="bg-gradient-to-b from-neutral-200 to-neutral-400 py-4 bg-clip-text text-center text-4xl md:text-7xl !leading-[1.15] font-medium font-heading tracking-tight text-transparent mt-8">
                 Start your next debate with Podium

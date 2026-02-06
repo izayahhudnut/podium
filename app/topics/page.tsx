@@ -169,7 +169,7 @@ export default function TopicsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0c] text-white">
+    <div className="min-h-screen bg-white text-[#111111]">
       <div className="flex min-h-screen">
         <AppSidebar />
         <main className="flex-1 px-8 py-6 lg:px-14">
@@ -178,13 +178,13 @@ export default function TopicsPage() {
           <section className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-semibold text-white">Topics</h1>
-                <p className="mt-2 text-sm text-white/50">
+                <h1 className="text-3xl font-semibold text-[#111111]">Topics</h1>
+                <p className="mt-2 text-sm text-[#111111]/50">
                   Build reusable agendas and import them when creating rooms.
                 </p>
               </div>
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#dcdcdc] bg-transparent px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#ECECEC]"
                 onClick={() => setShowModal(true)}
               >
                 <FiPlus className="h-4 w-4" />
@@ -193,32 +193,32 @@ export default function TopicsPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex w-full max-w-lg items-center gap-2 rounded-full border border-white/10 bg-[#141419] px-4 py-2 text-sm text-white/50">
-                <FiSearch className="h-4 w-4 text-white/40" />
+              <div className="flex w-full max-w-lg items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-sm text-[#111111]/50">
+                <FiSearch className="h-4 w-4 text-[#111111]/40" />
                 <input
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                  className="w-full bg-transparent text-sm text-[#111111] outline-none placeholder:text-[#111111]/40"
                   placeholder="Search templates"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                 />
               </div>
-              <div className="text-xs text-white/40">
+              <div className="text-xs text-[#111111]/40">
                 {filteredTemplates.length} templates
               </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#141419]">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-[#ECECEC] bg-white">
               {isLoading ? (
-                <div className="px-6 py-6 text-sm text-white/40">
+                <div className="px-6 py-6 text-sm text-[#111111]/40">
                   Loading templates…
                 </div>
               ) : filteredTemplates.length === 0 ? (
-                <div className="px-6 py-6 text-sm text-white/40">
+                <div className="px-6 py-6 text-sm text-[#111111]/40">
                   No templates yet. Create your first one.
                 </div>
               ) : (
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-[#101014] text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                  <thead className="bg-[#F8F8F8] text-xs font-semibold uppercase tracking-[0.2em] text-[#111111]/50">
                     <tr>
                       <th className="px-6 py-4">Template</th>
                       <th className="px-6 py-4">Topics</th>
@@ -226,7 +226,7 @@ export default function TopicsPage() {
                       <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10 bg-[#141419]">
+                  <tbody className="divide-y divide-white/10 bg-white">
                     {filteredTemplates.map((template) => {
                       const totalMinutes = template.topics.reduce(
                         (sum, topic) => sum + (topic.minutes ?? 0),
@@ -244,16 +244,16 @@ export default function TopicsPage() {
                                 {emojiPreview[0] ?? "📌"}
                               </div>
                               <div>
-                                <p className="font-semibold text-white">
+                                <p className="font-semibold text-[#111111]">
                                   {template.title}
                                 </p>
-                                <p className="text-xs text-white/40">
+                                <p className="text-xs text-[#111111]/40">
                                   {template.topics.length} topics
                                 </p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-white/60">
+                          <td className="px-6 py-4 text-[#111111]/60">
                             {emojiPreview.length > 0 ? (
                               <div className="flex gap-1 text-lg">
                                 {emojiPreview.map((emoji, index) => (
@@ -266,13 +266,13 @@ export default function TopicsPage() {
                               template.topics.length
                             )}
                           </td>
-                          <td className="px-6 py-4 text-white/60">
+                          <td className="px-6 py-4 text-[#111111]/60">
                             {totalMinutes} min
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-3">
                               <button
-                                className="inline-flex items-center justify-center text-white/60 transition hover:text-white"
+                                className="inline-flex items-center justify-center text-[#111111]/60 transition hover:text-[#111111]"
                                 onClick={() => openEditTemplate(template)}
                                 aria-label="Edit template"
                               >
@@ -306,42 +306,40 @@ export default function TopicsPage() {
           }
         }}
       >
-        <DialogContent className="w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#121214] p-6">
+        <DialogContent className="w-full max-w-2xl rounded-[28px] border border-[#ECECEC] bg-white p-6">
           <div>
-            <p className="text-lg font-semibold text-white">
+            <p className="text-lg font-semibold text-[#111111]">
               {editingTemplate ? "Edit template" : "Create template"}
             </p>
-            <p className="mt-1 text-sm text-white/50">
+            <p className="mt-1 text-sm text-[#111111]/50">
               Add your topics and reuse them in new rooms.
             </p>
           </div>
 
           <div className="mt-6 grid gap-6">
             <div className="grid gap-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[#111111]/40">
                 Template name
               </label>
               <input
-                className="w-full rounded-2xl border border-white/10 bg-[#141419] px-4 py-3 text-sm text-white outline-none focus:border-white/30 placeholder:text-white/40"
+                className="w-full rounded-2xl border border-[#ECECEC] bg-white px-4 py-3 text-sm text-[#111111] outline-none focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
                 value={templateTitle}
                 onChange={(event) => setTemplateTitle(event.target.value)}
                 placeholder="Policy Roundtable"
               />
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-white/10 bg-[#141419] p-4">
+            <div className="grid gap-3 rounded-2xl border border-[#ECECEC] bg-white p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white">Topics</p>
-                  <p className="text-xs text-white/50">
-                    Add a topic, set a duration, and build your agenda.
-                  </p>
+                  <p className="text-sm font-semibold text-[#111111]">Topics</p>
+                  <p className="text-xs text-[#111111]/50" />
                 </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-[90px_1fr_140px_110px]">
                 <div className="grid gap-2">
-                  <label className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                  <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">
                     Emoji
                   </label>
                   <Select value={topicEmoji} onValueChange={setTopicEmoji}>
@@ -358,18 +356,18 @@ export default function TopicsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                  <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">
                     Topic title
                   </label>
                   <input
-                    className="h-10 rounded-2xl border border-white/10 bg-[#141419] px-3 text-sm text-white outline-none focus:border-white/30 placeholder:text-white/40"
+                    className="h-10 rounded-2xl border border-[#ECECEC] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
                     value={topicTitle}
                     onChange={(event) => setTopicTitle(event.target.value)}
                     placeholder="Topic title"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                  <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">
                     Duration
                   </label>
                   <Select
@@ -389,7 +387,7 @@ export default function TopicsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                  <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">
                     Action
                   </label>
                   <button
@@ -406,17 +404,17 @@ export default function TopicsPage() {
                   {topics.map((topic) => (
                     <div
                       key={topic.id}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#15161a] px-3 py-2 text-sm"
+                      className="flex items-center justify-between rounded-2xl border border-[#ECECEC] bg-[#F8F8F8] px-3 py-2 text-sm"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1b1b20] text-base">
                           {topic.emoji ?? "📌"}
                         </div>
                         <div>
-                          <p className="font-semibold text-white">
+                          <p className="font-semibold text-[#111111]">
                             {topic.title}
                           </p>
-                          <p className="text-xs text-white/40">
+                          <p className="text-xs text-[#111111]/40">
                             {topic.minutes} min
                           </p>
                         </div>
@@ -436,7 +434,7 @@ export default function TopicsPage() {
 
           <div className="mt-6 flex items-center justify-end gap-3">
             <button
-              className="rounded-full px-4 py-2 text-sm font-semibold text-white/60"
+              className="rounded-full px-4 py-2 text-sm font-semibold text-[#111111]/60"
               onClick={() => {
                 setShowModal(false);
                 setEditingTemplate(null);
@@ -448,7 +446,7 @@ export default function TopicsPage() {
               className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${
                 canCreate
                   ? "bg-white text-black hover:bg-white/90"
-                  : "bg-white/10 text-white/40"
+                  : "bg-[#ECECEC] text-[#111111]/40"
               }`}
               onClick={handleCreateTemplate}
               disabled={!canCreate || isSaving}

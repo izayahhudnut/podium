@@ -67,9 +67,9 @@ export default function AppSidebar() {
             <Link
               key={item.label}
               href={item.href}
-              className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
+              className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-medium transition ${
                 isActive
-                  ? "bg-white/10 text-white"
+                  ? "bg-black text-white"
                   : "text-white/60 hover:bg-white/5 hover:text-white"
               } ${collapsed ? "w-12 justify-center" : ""}`}
               aria-label={item.label}
@@ -100,7 +100,7 @@ export default function AppSidebar() {
             </button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-sm rounded-3xl border border-white/10 bg-[#121214] p-0 text-white">
-            <div className="border-b border-white/10 px-6 py-5">
+            <div className="px-6 py-5">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">
                 Need help
               </p>
@@ -134,9 +134,6 @@ export default function AppSidebar() {
                   Copied to clipboard
                 </p>
               )}
-              <div className="mt-4 px-1 text-xs text-white/50">
-                Average response time: under 24 hours.
-              </div>
             </div>
           </DialogContent>
         </Dialog>
