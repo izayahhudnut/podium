@@ -12,10 +12,10 @@ export default async function HomePage() {
   const publicRooms = await getPublicRooms();
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="min-h-screen bg-[linear-gradient(135deg,#ffffff_0%,#f5f6f8_55%,#e6e7eb_100%)] text-[#111111]">
       <div className="flex min-h-screen">
         <AppSidebar />
-        <main className="flex-1 px-8 py-6 lg:px-14">
+        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-14 lg:pb-6">
           <AppTopbar />
 
           <section className="mt-8">
@@ -46,7 +46,7 @@ export default async function HomePage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                className="group w-full max-w-[360px] justify-self-start overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                className="group w-full max-w-none justify-self-start overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] sm:max-w-[360px]"
                 href="/rooms?create=1"
               >
                 <div className="relative h-36 bg-[#F8F8F8]">
@@ -66,7 +66,7 @@ export default async function HomePage() {
                 </div>
               </Link>
               <Link
-                className="group w-full max-w-[360px] justify-self-start overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                className="group w-full max-w-none justify-self-start overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] sm:max-w-[360px]"
                 href="/topics"
               >
                 <div className="relative h-36 bg-[#F8F8F8]">

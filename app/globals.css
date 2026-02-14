@@ -25,6 +25,58 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+.finwise-theme {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --primary: 49 99% 60%;
+  --secondary: 231 100% 59%;
+  --primary-accent: 48 78% 54%;
+  --foreground-accent: 0 0% 27%;
+  --hero-background: 240 9% 96%;
+  --border: 0 0% 85%;
+  --input: 0 0% 88%;
+  --ring: 49 99% 60%;
+  --muted: 240 9% 96%;
+  --muted-foreground: 0 0% 27%;
+  --accent: 240 9% 96%;
+  --accent-foreground: 0 0% 9%;
+}
+
+.finwise-theme {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: var(--finwise-font-body), "Source Sans 3", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.finwise-theme .manrope,
+.finwise-theme h1,
+.finwise-theme h2,
+.finwise-theme h3,
+.finwise-theme h4,
+.finwise-theme h5,
+.finwise-theme h6 {
+  font-family: var(--finwise-font-heading), "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.finwise-theme #logos svg {
+  width: fit-content;
+  height: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .finwise-theme #logos svg {
+    height: 3rem;
+  }
+}
+
+.finwise-theme .benefit-section:last-of-type > div {
+  margin-bottom: 2.5rem;
+}
+
 .linkify-theme {
   --foreground: 0 0% 98%;
   --background: 0 0% 3.9%;
@@ -63,4 +115,23 @@ body {
     rgb(54, 103, 196) 301.88deg,
     rgb(105, 30, 255) 360deg
   );
+}
+
+.no-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }

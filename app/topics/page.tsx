@@ -169,14 +169,14 @@ export default function TopicsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="min-h-screen bg-[linear-gradient(135deg,#ffffff_0%,#f5f6f8_55%,#e6e7eb_100%)] text-[#111111]">
       <div className="flex min-h-screen">
         <AppSidebar />
-        <main className="flex-1 px-8 py-6 lg:px-14">
+        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-14 lg:pb-6">
           <AppTopbar />
 
           <section className="mt-10">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-3xl font-semibold text-[#111111]">Topics</h1>
                 <p className="mt-2 text-sm text-[#111111]/50">
@@ -184,7 +184,7 @@ export default function TopicsPage() {
                 </p>
               </div>
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-[#dcdcdc] bg-transparent px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#ECECEC]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#dcdcdc] bg-transparent px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#ECECEC] sm:w-auto"
                 onClick={() => setShowModal(true)}
               >
                 <FiPlus className="h-4 w-4" />
@@ -192,8 +192,8 @@ export default function TopicsPage() {
               </button>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex w-full max-w-lg items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-sm text-[#111111]/50">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex w-full items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-sm text-[#111111]/50 sm:max-w-lg">
                 <FiSearch className="h-4 w-4 text-[#111111]/40" />
                 <input
                   className="w-full bg-transparent text-sm text-[#111111] outline-none placeholder:text-[#111111]/40"
@@ -207,7 +207,7 @@ export default function TopicsPage() {
               </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-[#ECECEC] bg-white">
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-[#ECECEC] bg-white">
               {isLoading ? (
                 <div className="px-6 py-6 text-sm text-[#111111]/40">
                   Loading templates…
@@ -217,16 +217,8 @@ export default function TopicsPage() {
                   No templates yet. Create your first one.
                 </div>
               ) : (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[#F8F8F8] text-xs font-semibold uppercase tracking-[0.2em] text-[#111111]/50">
-                    <tr>
-                      <th className="px-6 py-4">Template</th>
-                      <th className="px-6 py-4">Topics</th>
-                      <th className="px-6 py-4">Total time</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10 bg-white">
+                <>
+                  <div className="grid gap-3 p-4 md:hidden">
                     {filteredTemplates.map((template) => {
                       const totalMinutes = template.topics.reduce(
                         (sum, topic) => sum + (topic.minutes ?? 0),
@@ -237,60 +229,127 @@ export default function TopicsPage() {
                         .filter(Boolean)
                         .slice(0, 3);
                       return (
-                        <tr key={template.id} className="text-sm">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1b1b20] text-lg">
-                                {emojiPreview[0] ?? "📌"}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-[#111111]">
-                                  {template.title}
-                                </p>
-                                <p className="text-xs text-[#111111]/40">
-                                  {template.topics.length} topics
-                                </p>
-                              </div>
+                        <article
+                          key={template.id}
+                          className="rounded-2xl border border-[#ECECEC] bg-white p-4"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1b1b20] text-xl">
+                              {emojiPreview[0] ?? "📌"}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-[#111111]/60">
-                            {emojiPreview.length > 0 ? (
-                              <div className="flex gap-1 text-lg">
-                                {emojiPreview.map((emoji, index) => (
-                                  <span key={`${template.id}-${index}`}>
-                                    {emoji}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              template.topics.length
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-[#111111]/60">
-                            {totalMinutes} min
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-end gap-3">
+                            <div className="flex-1">
+                              <p className="text-base font-semibold text-[#111111]">
+                                {template.title}
+                              </p>
+                              <p className="mt-1 text-xs text-[#111111]/40">
+                                {template.topics.length} topics · {totalMinutes} min
+                              </p>
+                              {emojiPreview.length > 0 && (
+                                <div className="mt-2 flex gap-1 text-lg">
+                                  {emojiPreview.map((emoji, index) => (
+                                    <span key={`${template.id}-mobile-${index}`}>
+                                      {emoji}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
                               <button
-                                className="inline-flex items-center justify-center text-[#111111]/60 transition hover:text-[#111111]"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ECECEC] text-[#111111]/60 transition hover:text-[#111111]"
                                 onClick={() => openEditTemplate(template)}
                                 aria-label="Edit template"
                               >
                                 <FiEdit2 className="h-4 w-4" />
                               </button>
                               <button
-                                className="inline-flex items-center justify-center text-red-400 transition hover:text-red-300"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ECECEC] text-red-400 transition hover:text-red-300"
                                 aria-label="Delete template"
                               >
                                 <FiTrash2 className="h-4 w-4" />
                               </button>
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+                        </article>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </div>
+
+                  <table className="hidden min-w-[720px] w-full text-left text-sm md:table">
+                    <thead className="bg-[#F8F8F8] text-xs font-semibold uppercase tracking-[0.2em] text-[#111111]/50">
+                      <tr>
+                        <th className="px-6 py-4">Template</th>
+                        <th className="px-6 py-4">Topics</th>
+                        <th className="px-6 py-4">Total time</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10 bg-white">
+                      {filteredTemplates.map((template) => {
+                        const totalMinutes = template.topics.reduce(
+                          (sum, topic) => sum + (topic.minutes ?? 0),
+                          0
+                        );
+                        const emojiPreview = template.topics
+                          .map((topic) => topic.emoji)
+                          .filter(Boolean)
+                          .slice(0, 3);
+                        return (
+                          <tr key={template.id} className="text-sm">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1b1b20] text-lg">
+                                  {emojiPreview[0] ?? "📌"}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-[#111111]">
+                                    {template.title}
+                                  </p>
+                                  <p className="text-xs text-[#111111]/40">
+                                    {template.topics.length} topics
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-[#111111]/60">
+                              {emojiPreview.length > 0 ? (
+                                <div className="flex gap-1 text-lg">
+                                  {emojiPreview.map((emoji, index) => (
+                                    <span key={`${template.id}-${index}`}>
+                                      {emoji}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                template.topics.length
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-[#111111]/60">
+                              {totalMinutes} min
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-3">
+                                <button
+                                  className="inline-flex items-center justify-center text-[#111111]/60 transition hover:text-[#111111]"
+                                  onClick={() => openEditTemplate(template)}
+                                  aria-label="Edit template"
+                                >
+                                  <FiEdit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                  className="inline-flex items-center justify-center text-red-400 transition hover:text-red-300"
+                                  aria-label="Delete template"
+                                >
+                                  <FiTrash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
               )}
             </div>
           </section>
@@ -343,10 +402,10 @@ export default function TopicsPage() {
                     Emoji
                   </label>
                   <Select value={topicEmoji} onValueChange={setTopicEmoji}>
-                    <SelectTrigger className="h-10 w-full rounded-2xl px-3">
-                      <SelectValue />
+                    <SelectTrigger className="h-10 w-full rounded-2xl border border-[#ECECEC] bg-transparent px-3 text-sm text-[#111111] shadow-none [&>svg]:text-[#111111]/70">
+                      <SelectValue className="text-[#111111]" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl border border-[#ECECEC] bg-white text-[#111111] shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
                       {emojiOptions.map((emoji) => (
                         <SelectItem key={emoji} value={emoji}>
                           {emoji}
@@ -360,7 +419,7 @@ export default function TopicsPage() {
                     Topic title
                   </label>
                   <input
-                    className="h-10 rounded-2xl border border-[#ECECEC] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
+                    className="no-spinner h-10 rounded-2xl border border-[#ECECEC] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
                     value={topicTitle}
                     onChange={(event) => setTopicTitle(event.target.value)}
                     placeholder="Topic title"
@@ -370,21 +429,27 @@ export default function TopicsPage() {
                   <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">
                     Duration
                   </label>
-                  <Select
-                    value={String(topicMinutes)}
-                    onValueChange={(value) => setTopicMinutes(Number(value))}
-                  >
-                    <SelectTrigger className="h-10 rounded-2xl px-3">
-                      <SelectValue className="truncate" placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {durationOptions.map((minutes) => (
-                        <SelectItem key={minutes} value={String(minutes)}>
-                          {minutes} min
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    inputMode="numeric"
+                    className="h-10 rounded-2xl border border-[#ECECEC] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#d0d0d0] placeholder:text-[#111111]/40"
+                    value={topicMinutes}
+                    onChange={(event) => {
+                      const rawValue = event.target.value;
+                      if (rawValue === "") {
+                        setTopicMinutes(1);
+                        return;
+                      }
+                      const next = Math.min(
+                        60,
+                        Math.max(1, Number(rawValue))
+                      );
+                      setTopicMinutes(Number.isNaN(next) ? 1 : next);
+                    }}
+                    placeholder="Minutes (1-60)"
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-[11px] uppercase tracking-[0.2em] text-[#111111]/40">

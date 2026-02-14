@@ -393,13 +393,13 @@ function RoomsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="min-h-screen bg-[linear-gradient(135deg,#ffffff_0%,#f5f6f8_55%,#e6e7eb_100%)] text-[#111111]">
       <Suspense fallback={null}>
         <SearchParamsHandler onCreateParam={setShowModal} />
       </Suspense>
       <div className="flex min-h-screen">
         <AppSidebar />
-        <main className="flex-1 px-8 py-6 lg:px-14">
+        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-14 lg:pb-6">
           <AppTopbar />
 
           <section className="mt-10">
@@ -451,7 +451,7 @@ function RoomsPageContent() {
                 Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={`skeleton-${index}`}
-                    className="w-full max-w-[360px] overflow-hidden rounded-xl border border-[#ECECEC] bg-white"
+                    className="w-full max-w-none overflow-hidden rounded-xl border border-[#ECECEC] bg-white sm:max-w-[360px]"
                   >
                     <div className="relative h-36 bg-[#F8F8F8]">
                       <Skeleton className="h-full w-full rounded-none" />
@@ -465,7 +465,7 @@ function RoomsPageContent() {
               {filteredRooms.map((room) => (
                 <article
                   key={room.id}
-                  className="group w-full max-w-[360px] cursor-pointer overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                  className="group w-full max-w-none cursor-pointer overflow-hidden rounded-xl border border-[#ECECEC] bg-white transition hover:-translate-y-1 hover:border-[#dcdcdc] hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] sm:max-w-[360px]"
                   onClick={() =>
                     router.push(`/${room.owner_username}/${room.slug}`)
                   }
@@ -640,15 +640,15 @@ function RoomsPageContent() {
                   }
                   disabled={templatesLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 rounded-2xl border border-[#ECECEC] bg-transparent px-3 text-sm text-[#111111] shadow-none [&>svg]:text-[#111111]/70">
                     <SelectValue
-                      className="truncate"
+                      className="truncate text-[#111111] data-[placeholder]:text-[#111111]/50"
                       placeholder={
                         templatesLoading ? "Loading templates..." : "No template"
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-2xl border border-[#ECECEC] bg-white text-[#111111] shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
                     <SelectItem value="none">No template</SelectItem>
                     {topicTemplates.map((item) => (
                       <SelectItem key={item.id} value={item.id}>

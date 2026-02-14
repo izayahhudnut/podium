@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Manrope, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import AuthHeader from "./components/AuthHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { ToastStateProvider } from "@/components/ui/use-toast";
+import LayoutShell from "./components/LayoutShell";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--finwise-font-heading",
+});
+
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--finwise-font-body",
+});
 
 export const metadata: Metadata = {
   title: "Podium",
@@ -21,17 +32,24 @@ export default function RootLayout({
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/home"
       signUpFallbackRedirectUrl="/home"
+      localization={{
+        signIn: {
+          start: {
+            title: "Sign in to Podium",
+            subtitle: "Welcome back! Please sign in to continue.",
+          },
+        },
+      }}
     >
       <html lang="en">
-      <body
-        className="antialiased font-sans"
-      >
-        <ToastStateProvider>
-          <AuthHeader />
-          {children}
-          <Toaster />
-        </ToastStateProvider>
-      </body>
+        <body
+          className={`${manrope.variable} ${sourceSans.variable} antialiased font-sans`}
+        >
+          <ToastStateProvider>
+            <LayoutShell>{children}</LayoutShell>
+            <Toaster />
+          </ToastStateProvider>
+        </body>
       </html>
     </ClerkProvider>
   );

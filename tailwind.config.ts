@@ -36,6 +36,9 @@ const config = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
+        "primary-accent": "hsl(var(--primary-accent))",
+        "foreground-accent": "hsl(var(--foreground-accent))",
+        "hero-background": "hsl(var(--hero-background))",
         tertiary: {
           DEFAULT: "hsl(var(--tertiary))",
           foreground: "hsl(var(--tertiary-foreground))",

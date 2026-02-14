@@ -27,6 +27,7 @@ import {
 } from "react-icons/fi";
 import { HiOutlineSpeakerphone, HiSparkles } from "react-icons/hi";
 import {
+  ChevronDown,
   CirclePlus,
   ExternalLink,
   MessageCircle,
@@ -148,7 +149,6 @@ type VideoTileProps = {
 function VideoTile({
   uid,
   name,
-  avatarUrl,
   isLocal,
   track,
   micMuted,
@@ -172,58 +172,11 @@ function VideoTile({
     (track as any)?.getMediaStreamTrack?.()?.enabled ??
     true;
   const showPlaceholder = !track || cameraOff || !trackEnabled;
-  const initials =
-    (name ?? uid)
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "G";
-
   return (
     <div
-      className={`relative aspect-video w-full min-h-[220px] overflow-hidden rounded-3xl border border-[#ECECEC] ${
-        showPlaceholder
-          ? "bg-[linear-gradient(135deg,#0f172a,#111827)]"
-          : "bg-black"
-      }`}
+      className="relative aspect-video w-full min-h-[220px] overflow-hidden rounded-3xl border border-[#ECECEC] bg-black"
     >
-      {showPlaceholder ? (
-        <div className="absolute inset-0 rounded-3xl">
-          <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_60%)]" />
-          <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_bottom,rgba(0,0,0,0.4),transparent_60%)]" />
-          <div className="absolute inset-0 rounded-3xl backdrop-blur-[8px]" />
-          <div className="relative z-10 flex h-full w-full items-center justify-center p-6">
-            <div className="flex w-full max-w-[420px] items-center gap-4 rounded-2xl border border-[#ECECEC] bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={name ?? uid}
-                  className="h-12 w-12 rounded-full object-cover shadow-[0_10px_24px_rgba(0,0,0,0.35)]"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-base font-semibold text-white">
-                  {initials}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white">
-                  {name ?? uid}
-                </p>
-                <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-white">
-                  {micMuted ? (
-                    <FiMicOff className="h-3 w-3" />
-                  ) : (
-                    <FiMic className="h-3 w-3" />
-                  )}
-                  <FiVideoOff className="h-3 w-3" />
-                  <span>Camera off</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {showPlaceholder ? null : (
         <div ref={videoRef} className="absolute inset-0 h-full w-full rounded-3xl" />
       )}
       <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
@@ -288,12 +241,10 @@ function AgoraVideoGrid({
   micMuted,
   localAudioLevel,
 }: AgoraVideoGridProps) {
-  const tileCount = (localOnStage ? 1 : 0) + remoteUsers.length;
   return (
     <div
-      className={`mx-auto grid h-full min-h-[420px] w-full max-w-[960px] gap-4 ${
-        tileCount > 1 ? "lg:grid-cols-2" : "grid-cols-1"
-      }`}
+      className="mx-auto grid h-full min-h-[420px] w-full gap-4"
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
     >
       {localOnStage && (
         <VideoTile
@@ -325,6 +276,7 @@ type SessionHeaderProps = {
   showTopics: boolean;
   onToggleTopics: () => void;
   onToggleDebate: () => void;
+  canToggleDebate: boolean;
   onLeave: () => void;
   onShare: () => void;
   running: boolean;
@@ -335,6 +287,7 @@ function SessionHeader({
   showTopics,
   onToggleTopics,
   onToggleDebate,
+  canToggleDebate,
   onLeave,
   onShare,
   running,
@@ -346,46 +299,43 @@ function SessionHeader({
       ? "Resume debate"
       : "Start debate";
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ECECEC] bg-white px-3 py-2">
+    <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2">
       <div className="flex items-center gap-3">
         <button
-          className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium text-[#111111] transition hover:bg-[#F8F8F8]"
+          className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-[#111111] transition hover:bg-[#F8F8F8]"
           onClick={onToggleTopics}
         >
-          <FiList className="h-3.5 w-3.5" />
+          <FiList className="h-4.5 w-4.5" />
           {showTopics ? "Hide topics" : "Select topics"}
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <button
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition ${
-            running
-              ? "border border-[#d9f0df] bg-[#F2FBF6] text-emerald-700 hover:bg-[#e8f7ef]"
-              : "border border-[#ECECEC] bg-white text-[#111111] hover:bg-[#F8F8F8]"
-          }`}
+          className="inline-flex items-center gap-2 rounded-full bg-[#F8F8F8] px-3.5 py-2 text-sm font-medium text-black/75 transition hover:bg-[#ECECEC] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => {
             if (!showTopics) {
               onToggleTopics();
             }
             onToggleDebate();
           }}
+          disabled={!canToggleDebate}
         >
           {running ? (
-            <FiPause className="h-3.5 w-3.5" />
+            <FiPause className="h-4.5 w-4.5 text-emerald-500" />
           ) : (
-            <HiOutlineSpeakerphone className="h-3.5 w-3.5" />
+            <HiOutlineSpeakerphone className="h-4.5 w-4.5 text-emerald-500" />
           )}
           {debateLabel}
         </button>
         <button
-          className="inline-flex items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-3 py-1.5 text-xs font-medium text-[#111111] transition hover:bg-[#F8F8F8]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#ECECEC] bg-white px-3.5 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#F8F8F8]"
           onClick={onShare}
         >
-          <FiLink className="h-3.5 w-3.5" />
+          <FiLink className="h-4.5 w-4.5" />
           Share debate
         </button>
         <button
-          className="rounded-full border border-[#ffd7d7] bg-[#fff5f5] px-3 py-1.5 text-xs font-medium text-[#c0392b] transition hover:bg-[#ffeaea]"
+          className="rounded-full border border-[#ffd7d7] bg-[#fff5f5] px-3.5 py-2 text-sm font-medium text-[#c0392b] transition hover:bg-[#ffeaea]"
           onClick={onLeave}
         >
           Leave
@@ -420,6 +370,9 @@ export default function RoomPage() {
   const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [topicMinuteEdits, setTopicMinuteEdits] = useState<
+    Record<string, string>
+  >({});
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [mediaRetryKey, setMediaRetryKey] = useState(0);
   const [mediaBlocked, setMediaBlocked] = useState(false);
@@ -470,6 +423,8 @@ export default function RoomPage() {
   const [stageMembers, setStageMembers] = useState<Record<string, boolean>>({});
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const endRoomOnceRef = useRef(false);
+  const isAdminRef = useRef(false);
+  const stageMembersRef = useRef<Record<string, boolean>>({});
 
   const markRoomEnded = async (keepalive = false) => {
     if (!roomSlug || !usernameParam) {
@@ -515,7 +470,7 @@ export default function RoomPage() {
     editorProps: {
       attributes: {
         class:
-          "min-h-[280px] rounded-3xl border border-[#ECECEC] bg-white px-4 py-3 text-sm text-black/70 outline-none",
+          "min-h-[280px] rounded-3xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none lg:border-[#ECECEC] lg:bg-white lg:text-black/70",
       },
     },
   });
@@ -1185,6 +1140,15 @@ export default function RoomPage() {
             ...prev,
             [parsed.uid]: parsed.name,
           }));
+          if (isAdminRef.current && parsed.uid !== agoraTokens.uid) {
+            void client.publish(
+              agoraTokens.channel,
+              JSON.stringify({
+                type: "stage_snapshot",
+                stageMembers: stageMembersRef.current,
+              })
+            );
+          }
         }
 
         if (parsed.type === "request_join" && parsed.uid) {
@@ -1217,6 +1181,18 @@ export default function RoomPage() {
             ...prev,
             [parsed.uid]: Boolean(parsed.onStage),
           }));
+        }
+
+        if (
+          parsed.type === "stage_snapshot" &&
+          parsed.stageMembers &&
+          typeof parsed.stageMembers === "object"
+        ) {
+          const normalizedEntries = Object.entries(parsed.stageMembers).map(
+            ([uid, onStage]) => [uid, Boolean(onStage)] as const
+          );
+          const normalized = Object.fromEntries(normalizedEntries);
+          setStageMembers((prev) => ({ ...normalized, ...prev }));
         }
 
         if (parsed.type === "mute" && parsed.uid) {
@@ -1315,6 +1291,14 @@ export default function RoomPage() {
   }, [activeIndex, remainingSeconds, running, topics]);
 
   const toggleDebate = () => {
+    if (!isAdmin) {
+      toast({
+        title: "Host access required",
+        description: "Only the host can start or pause the debate.",
+      });
+      return;
+    }
+
     if (running) {
       setRunning(false);
       return;
@@ -1365,12 +1349,16 @@ export default function RoomPage() {
     if (!title) {
       return;
     }
+    const nextMinutes = Math.min(
+      60,
+      Math.max(1, Number(newTopicMinutes || "1"))
+    );
     setTopics((prev) => [
       ...prev,
       {
         id: `${Date.now()}`,
         title,
-        minutes: Number(newTopicMinutes),
+        minutes: Number.isNaN(nextMinutes) ? 1 : nextMinutes,
       },
     ]);
     toast({ title: "Topic added" });
@@ -1780,8 +1768,25 @@ export default function RoomPage() {
   const needsGuestName = !user?.id && !guestName;
   const waitingForApproval = !isAdmin && !canPublish;
 
+  useEffect(() => {
+    isAdminRef.current = isAdmin;
+  }, [isAdmin]);
+
+  useEffect(() => {
+    stageMembersRef.current = stageMembers;
+  }, [stageMembers]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (window.innerWidth < 1024) {
+      setActivePanel("stage");
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="min-h-screen bg-black text-white lg:bg-white lg:text-[#111111]">
       {needsGuestName && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
@@ -1828,8 +1833,10 @@ export default function RoomPage() {
             <div className="grid gap-3">
               <div className="relative">
                 <button
-                  className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl bg-black text-xs font-semibold text-white transition ${
-                    micOn ? "opacity-100" : "opacity-75"
+                  className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#111111] text-xs font-medium text-white transition ${
+                    micOn
+                      ? "opacity-100 shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
+                      : "opacity-80"
                   }`}
                   onClick={async () => {
                     if (!isAdmin && !canPublish) {
@@ -1845,21 +1852,21 @@ export default function RoomPage() {
                   }}
                 >
                   {micOn ? (
-                    <Mic className="h-4 w-4 text-white" />
+                    <Mic className="h-5 w-5 text-emerald-400" />
                   ) : (
-                    <MicOff className="h-4 w-4 text-red-500" />
+                    <MicOff className="h-5 w-5 text-red-400" />
                   )}
                   <span>Mic</span>
                 </button>
                 <button
-                  className="absolute bottom-2 right-2 text-[10px] text-white/55"
+                  className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center text-white/80 transition hover:text-white"
                   onClick={() => setShowMicMenu((prev) => !prev)}
                   aria-label="Select microphone"
                 >
-                  ▾
+                  <ChevronDown className="h-3 w-3" />
                 </button>
                 {showMicMenu && (
-                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-[#ECECEC] bg-white p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
+                  <div className="absolute left-24 top-0 z-50 w-60 rounded-2xl border border-[#ECECEC] bg-white p-3 text-xs shadow-[0_16px_36px_rgba(15,15,15,0.14)]">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-black/45">
                       Microphone
                     </p>
@@ -1868,33 +1875,38 @@ export default function RoomPage() {
                         No microphone detected.
                       </p>
                     )}
-                    <select
-                      value={selectedAudioDevice}
-                      onChange={async (event) => {
-                        const deviceId = event.target.value;
+                    <Select
+                      value={selectedAudioDevice || undefined}
+                      onValueChange={async (deviceId) => {
                         setSelectedAudioDevice(deviceId);
                         await localAudioTrack?.setDevice(deviceId);
                       }}
-                      className="mt-2 w-full rounded-xl border border-[#ECECEC] px-2 py-2 text-xs"
                       disabled={audioDevices.length === 0}
                     >
-                      {audioDevices.length === 0 ? (
-                        <option value="">No microphone</option>
-                      ) : (
-                        audioDevices.map((device) => (
-                          <option key={device.deviceId} value={device.deviceId}>
+                      <SelectTrigger className="mt-2 h-9 rounded-xl border border-[#ECECEC] bg-white text-xs text-[#111111] shadow-none">
+                        <SelectValue placeholder="Select microphone" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border border-[#ECECEC] bg-white text-[#111111]">
+                        {audioDevices.map((device) => (
+                          <SelectItem
+                            key={device.deviceId}
+                            value={device.deviceId}
+                            className="text-[#111111] focus:bg-[#F3F4F6] focus:text-[#111111]"
+                          >
                             {device.label || "Microphone"}
-                          </option>
-                        ))
-                      )}
-                    </select>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>
               <div className="relative">
                 <button
-                  className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl bg-black text-xs font-semibold text-white transition ${
-                    cameraOn ? "opacity-100" : "opacity-75"
+                  className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#111111] text-xs font-medium text-white transition ${
+                    cameraOn
+                      ? "opacity-100 shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
+                      : "opacity-80"
                   }`}
                   onClick={async () => {
                     if (!isAdmin && !canPublish) {
@@ -1910,39 +1922,52 @@ export default function RoomPage() {
                   }}
                 >
                   {cameraOn ? (
-                    <Video className="h-4 w-4 text-white" />
+                    <Video className="h-5 w-5 text-emerald-400" />
                   ) : (
-                    <VideoOff className="h-4 w-4 text-red-500" />
+                    <VideoOff className="h-5 w-5 text-red-400" />
                   )}
                   <span>Video</span>
                 </button>
                 <button
-                  className="absolute bottom-2 right-2 text-[10px] text-white/55"
+                  className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center text-white/80 transition hover:text-white"
                   onClick={() => setShowCameraMenu((prev) => !prev)}
                   aria-label="Select camera"
                 >
-                  ▾
+                  <ChevronDown className="h-3 w-3" />
                 </button>
                 {showCameraMenu && (
-                  <div className="absolute left-24 top-0 z-50 w-56 rounded-2xl border border-[#ECECEC] bg-white p-3 text-xs shadow-[0_12px_30px_rgba(15,15,15,0.12)]">
+                  <div className="absolute left-24 top-0 z-50 w-60 rounded-2xl border border-[#ECECEC] bg-white p-3 text-xs shadow-[0_16px_36px_rgba(15,15,15,0.14)]">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-black/45">
                       Camera
                     </p>
-                    <select
-                      value={selectedVideoDevice}
-                      onChange={async (event) => {
-                        const deviceId = event.target.value;
+                    {videoDevices.length === 0 ? (
+                      <p className="mt-2 text-[11px] text-black/55">
+                        No camera detected.
+                      </p>
+                    ) : null}
+                    <Select
+                      value={selectedVideoDevice || undefined}
+                      onValueChange={async (deviceId) => {
                         setSelectedVideoDevice(deviceId);
                         await localVideoTrack?.setDevice(deviceId);
                       }}
-                      className="mt-2 w-full rounded-xl border border-[#ECECEC] px-2 py-2 text-xs"
+                      disabled={videoDevices.length === 0}
                     >
-                      {videoDevices.map((device) => (
-                        <option key={device.deviceId} value={device.deviceId}>
-                          {device.label || "Camera"}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="mt-2 h-9 rounded-xl border border-[#ECECEC] bg-white text-xs text-[#111111] shadow-none">
+                        <SelectValue placeholder="Select camera" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border border-[#ECECEC] bg-white text-[#111111]">
+                        {videoDevices.map((device) => (
+                          <SelectItem
+                            key={device.deviceId}
+                            value={device.deviceId}
+                            className="text-[#111111] focus:bg-[#F3F4F6] focus:text-[#111111]"
+                          >
+                            {device.label || "Camera"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>
@@ -2012,18 +2037,14 @@ export default function RoomPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button
-                        className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
-                          running
-                            ? "border border-emerald-500/40 bg-[#F2FBF6] text-emerald-700 hover:bg-[#e8f7ef]"
-                            : "border border-[#dcdcdc] bg-white text-[#111111] hover:bg-[#f6f6f6]"
-                        }`}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#F8F8F8] px-3.5 py-1.5 text-xs font-medium text-black/75 transition hover:bg-[#ECECEC] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50"
                         onClick={toggleDebate}
                         disabled={!isAdmin}
                       >
                         {running ? (
-                          <FiPause className="h-4 w-4" />
+                          <FiPause className="h-4 w-4 text-emerald-500" />
                         ) : (
-                          <HiOutlineSpeakerphone className="h-4 w-4" />
+                          <HiOutlineSpeakerphone className="h-4 w-4 text-emerald-500" />
                         )}
                         {running
                           ? "Pause debate"
@@ -2033,17 +2054,6 @@ export default function RoomPage() {
                       </button>
                     </div>
                   </div>
-
-                  {isAdmin && (
-                    <div className="mt-2 flex items-center justify-start">
-                      <button className="flex items-center justify-center rounded-full bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#111111] transition hover:bg-[#ECECEC]">
-                        <span className="inline-flex items-center gap-2">
-                          <HiSparkles className="h-3.5 w-3.5 text-purple-600" />
-                          Generate
-                        </span>
-                      </button>
-                    </div>
-                  )}
 
                   <div className="mt-3 grid gap-2 overflow-y-auto pr-1">
                     {topics.map((topic, index) => (
@@ -2099,26 +2109,50 @@ export default function RoomPage() {
                         </div>
                         <div className="flex items-center justify-between gap-2">
                           {isAdmin ? (
-                            <Select
-                              value={String(topic.minutes)}
-                              onValueChange={(value) =>
-                                updateTopic(topic.id, "minutes", value)
-                              }
-                            >
-                              <SelectTrigger className="h-8 w-[92px] rounded-lg px-2.5 text-xs">
-                                <SelectValue placeholder="Time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {durationOptions.map((minutes) => (
-                                  <SelectItem
-                                    key={minutes}
-                                    value={String(minutes)}
-                                  >
-                                    {minutes} min
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                inputMode="numeric"
+                                value={
+                                  topicMinuteEdits[topic.id] ??
+                                  String(topic.minutes)
+                                }
+                                onChange={(event) => {
+                                  const rawValue = event.target.value;
+                                  if (rawValue === "" || /^\d+$/.test(rawValue)) {
+                                    setTopicMinuteEdits((prev) => ({
+                                      ...prev,
+                                      [topic.id]: rawValue,
+                                    }));
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const rawValue =
+                                    topicMinuteEdits[topic.id] ?? "";
+                                  const next = Math.min(
+                                    60,
+                                    Math.max(1, Number(rawValue || "1"))
+                                  );
+                                  updateTopic(
+                                    topic.id,
+                                    "minutes",
+                                    String(Number.isNaN(next) ? 1 : next)
+                                  );
+                                  setTopicMinuteEdits((prev) => {
+                                    const { [topic.id]: _, ...rest } = prev;
+                                    return rest;
+                                  });
+                                }}
+                                className="no-spinner h-8 w-12 rounded-lg border border-[#ECECEC] bg-white px-2 text-xs text-[#111111] outline-none focus:border-[#d0d0d0]"
+                                placeholder="Time"
+                                aria-label="Topic time in minutes"
+                              />
+                              <span className="text-[10px] text-black/45">
+                                min
+                              </span>
+                            </div>
                           ) : (
                             <span className="text-[11px] text-black/55">
                               {topic.minutes} min
@@ -2185,24 +2219,36 @@ export default function RoomPage() {
                               className="min-w-[200px] flex-1 bg-transparent text-sm text-[#111111] outline-none placeholder:text-black/45"
                               aria-label="Topic title"
                             />
-                            <Select
-                              value={newTopicMinutes}
-                              onValueChange={setNewTopicMinutes}
-                            >
-                              <SelectTrigger className="h-8 rounded-lg px-2.5 text-xs">
-                                <SelectValue placeholder="Time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {durationOptions.map((minutes) => (
-                                  <SelectItem
-                                    key={minutes}
-                                    value={String(minutes)}
-                                  >
-                                    {minutes} min
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                inputMode="numeric"
+                                value={newTopicMinutes}
+                                onChange={(event) => {
+                                  const rawValue = event.target.value;
+                                  if (rawValue === "" || /^\d+$/.test(rawValue)) {
+                                    setNewTopicMinutes(rawValue);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const next = Math.min(
+                                    60,
+                                    Math.max(1, Number(newTopicMinutes || "1"))
+                                  );
+                                  setNewTopicMinutes(
+                                    String(Number.isNaN(next) ? 1 : next)
+                                  );
+                                }}
+                                className="no-spinner h-8 w-12 rounded-lg border border-[#ECECEC] bg-white px-2 text-xs text-[#111111] outline-none focus:border-[#d0d0d0]"
+                                placeholder="Time"
+                                aria-label="New topic time in minutes"
+                              />
+                              <span className="text-[10px] text-black/45">
+                                min
+                              </span>
+                            </div>
                             <button
                               type="submit"
                               className="rounded-full border border-[#dcdcdc] bg-white px-3 py-1 text-xs font-medium text-[#111111] transition hover:bg-[#f6f6f6] disabled:cursor-not-allowed disabled:bg-[#f0f0f0] disabled:text-black/45"
@@ -2220,6 +2266,12 @@ export default function RoomPage() {
 
                     {isAdmin && (
                       <div className="flex items-center gap-3">
+                        <button className="flex items-center justify-center rounded-full bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#111111] transition hover:bg-[#ECECEC]">
+                          <span className="inline-flex items-center gap-2">
+                            <HiSparkles className="h-3.5 w-3.5 text-purple-600" />
+                            Generate
+                          </span>
+                        </button>
                         <button
                           className={`rounded-full px-4 py-1.5 text-xs font-medium ${
                             topicsDirty
@@ -2722,50 +2774,53 @@ export default function RoomPage() {
           </div>
         </div>
 
-        <main className="flex-1 px-6 py-6 lg:px-10">
+        <main className="flex-1 bg-black px-0 py-0 lg:bg-transparent lg:px-10 lg:py-6">
           {waitingForApproval ? (
-            <div className="flex min-h-[70vh] items-center justify-center">
+            <div className="flex min-h-[70vh] items-center justify-center px-6 py-6 lg:px-0 lg:py-0">
               <div className="text-center">
                 <div className="mx-auto mb-6 flex items-center justify-center gap-3">
                   <img src="/small-logo.svg" alt="Podium" className="h-10 w-10" />
-                  <span className="text-2xl font-semibold text-[#111111]">Podium</span>
+                  <span className="text-2xl font-semibold text-white lg:text-[#111111]">Podium</span>
                 </div>
-                <p className="text-xs uppercase tracking-[0.3em] text-black/45">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/55 lg:text-black/45">
                   Waiting room
                 </p>
-                <p className="mt-3 text-3xl font-semibold text-[#111111]">
+                <p className="mt-3 text-3xl font-semibold text-white lg:text-[#111111]">
                   Waiting for host approval
                 </p>
-                <p className="mt-2 text-sm text-black/55">
+                <p className="mt-2 text-sm text-white/70 lg:text-black/55">
                   We’ve sent your request to join the stage.
                 </p>
               </div>
             </div>
           ) : (
             <>
-              <SessionHeader
-                showTopics={activePanel === "topics"}
-                onToggleTopics={() =>
-                  setActivePanel((prev) => (prev === "topics" ? null : "topics"))
-                }
-                onToggleDebate={toggleDebate}
-                onLeave={() => handleLeaveRoom()}
-                onShare={handleShareDebate}
-                running={running}
-                hasActiveTopic={activeIndex !== null}
-              />
+              <div className="hidden lg:block">
+                <SessionHeader
+                  showTopics={activePanel === "topics"}
+                  onToggleTopics={() =>
+                    setActivePanel((prev) => (prev === "topics" ? null : "topics"))
+                  }
+                  onToggleDebate={toggleDebate}
+                  canToggleDebate={isAdmin}
+                  onLeave={() => handleLeaveRoom()}
+                  onShare={handleShareDebate}
+                  running={running}
+                  hasActiveTopic={activeIndex !== null}
+                />
+              </div>
 
-              <section className="relative mt-8">
+              <section className="relative mt-0 lg:mt-8">
             <div className="relative overflow-hidden">
-              <div className="flex h-full min-h-[420px] flex-col gap-4 p-6">
+              <div className="flex h-full min-h-[100dvh] flex-col gap-4 pb-24 lg:min-h-[420px] lg:p-6 lg:pb-0">
                 {mediaError && (
-                  <div className="rounded-3xl border border-dashed border-[#ECECEC] bg-[#F8F8F8] px-6 py-6 text-sm text-black/60">
-                    <p className="text-sm font-semibold">
+                  <div className="mx-4 rounded-3xl border border-white/20 bg-black/60 px-6 py-6 text-sm text-white/75 lg:mx-0 lg:border-dashed lg:border-[#ECECEC] lg:bg-[#F8F8F8] lg:text-black/60">
+                    <p className="text-sm font-semibold text-white lg:text-[#111111]">
                       Camera or mic not available
                     </p>
-                    <p className="mt-2 text-xs text-black/55">{mediaError}</p>
+                    <p className="mt-2 text-xs text-white/65 lg:text-black/55">{mediaError}</p>
                     <button
-                      className="mt-4 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90"
+                      className="mt-4 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90 lg:bg-white"
                       onClick={handleRequestMedia}
                     >
                       Request access again
@@ -2773,31 +2828,31 @@ export default function RoomPage() {
                   </div>
                 )}
                 {isLoading && (
-                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-[#ECECEC] bg-[linear-gradient(135deg,#ffffff,#F8F8F8)]">
-                    <p className="text-sm text-black/55">Joining session…</p>
+                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-none border-0 bg-black lg:rounded-3xl lg:border lg:border-[#ECECEC] lg:bg-[linear-gradient(135deg,#ffffff,#F8F8F8)]">
+                    <p className="text-sm text-white/70 lg:text-black/55">Joining session…</p>
                   </div>
                 )}
 
                 {!isLoading && agoraTokens && (
                   <div className="grid gap-6">
                     {running && activeTopic && (
-                      <div className="rounded-2xl border border-[#ECECEC] bg-white px-4 py-3 shadow-[0_6px_18px_rgba(0,0,0,0.06)]">
+                      <div className="mx-4 rounded-2xl border border-white/20 bg-black/65 px-4 py-3 shadow-[0_6px_18px_rgba(0,0,0,0.25)] lg:mx-0 lg:border-[#ECECEC] lg:bg-white lg:shadow-[0_6px_18px_rgba(0,0,0,0.06)]">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.22em] text-black/45">
+                            <p className="text-[10px] uppercase tracking-[0.22em] text-white/55 lg:text-black/45">
                               Plan {activeIndex !== null ? activeIndex + 1 : 1}/
                               {topics.length}
                             </p>
-                            <p className="mt-1 text-sm font-medium text-[#111111]">
+                            <p className="mt-1 text-sm font-medium text-white lg:text-[#111111]">
                               {activeTopic.title}
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-2xl font-medium tabular-nums text-[#111111]">
+                            <span className="text-2xl font-medium tabular-nums text-white lg:text-[#111111]">
                               {formatTime(remainingSeconds)}
                             </span>
                             <button
-                              className="rounded-full border border-[#ECECEC] bg-[#F8F8F8] px-3 py-1 text-[11px] font-medium text-[#111111] transition hover:bg-[#ECECEC]"
+                              className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-medium text-white transition hover:bg-white/20 lg:border-[#ECECEC] lg:bg-[#F8F8F8] lg:text-[#111111] lg:hover:bg-[#ECECEC]"
                               onClick={skipTopic}
                             >
                               Skip
@@ -2806,7 +2861,7 @@ export default function RoomPage() {
                         </div>
                       </div>
                     )}
-                    <div className="rounded-3xl border border-[#ECECEC] bg-white p-4">
+                    <div className="rounded-none bg-transparent lg:rounded-3xl lg:bg-white">
                       <div className="mt-1">
                         {stageVisibleParticipants.length > 0 ? (
                           <AgoraVideoGrid
@@ -2853,15 +2908,15 @@ export default function RoomPage() {
                             localAudioLevel={localAudioLevel}
                           />
                         ) : (
-                          <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-[#ECECEC] bg-[radial-gradient(circle_at_top,#ffffff,#F8F8F8)]">
+                          <div className="flex h-full min-h-[420px] items-center justify-center rounded-none border-0 bg-black lg:rounded-3xl lg:border lg:border-[#ECECEC] lg:bg-[radial-gradient(circle_at_top,#ffffff,#F8F8F8)]">
                             <div className="text-center">
-                              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#ECECEC] bg-white shadow-[0_15px_35px_rgba(0,0,0,0.08)]">
-                                <FiUsers className="h-6 w-6 text-black/70" />
+                              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/25 bg-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.2)] lg:border-[#ECECEC] lg:bg-white lg:shadow-[0_15px_35px_rgba(0,0,0,0.08)]">
+                                <FiUsers className="h-6 w-6 text-white/80 lg:text-black/70" />
                               </div>
-                              <p className="mt-4 text-2xl font-semibold text-[#111111]">
+                              <p className="mt-4 text-2xl font-semibold text-white lg:text-[#111111]">
                                 Stage is empty
                               </p>
-                              <p className="mt-2 text-sm text-black/55">
+                              <p className="mt-2 text-sm text-white/70 lg:text-black/55">
                                 Add someone to the stage to start the debate.
                               </p>
                             </div>
@@ -2871,7 +2926,7 @@ export default function RoomPage() {
                     </div>
 
                     {isAdmin && (
-                      <div className="rounded-3xl border border-[#ECECEC] bg-white p-4 shadow-[0_6px_18px_rgba(0,0,0,0.05)]">
+                      <div className="hidden rounded-3xl border border-[#ECECEC] bg-white p-4 shadow-[0_6px_18px_rgba(0,0,0,0.05)] lg:block">
                         <div className="flex items-center justify-between">
                           <p className="text-xs uppercase tracking-[0.3em] text-black/45">
                             Participants
@@ -2961,9 +3016,9 @@ export default function RoomPage() {
                 )}
 
                 {!isLoading && !agoraTokens && (
-                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-[#ECECEC] bg-[linear-gradient(135deg,#ffffff,#F8F8F8)]">
+                  <div className="flex h-full min-h-[420px] items-center justify-center rounded-none border-0 bg-black lg:rounded-3xl lg:border lg:border-[#ECECEC] lg:bg-[linear-gradient(135deg,#ffffff,#F8F8F8)]">
                     <div className="text-center">
-                      <p className="text-sm font-semibold">Session unavailable</p>
+                      <p className="text-sm font-semibold text-white lg:text-[#111111]">Session unavailable</p>
                       <button
                         className="mt-3 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/90"
                         onClick={() => window.location.reload()}
@@ -2977,6 +3032,113 @@ export default function RoomPage() {
 
             </div>
           </section>
+              <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-white/15 bg-black/95 px-2 py-2 backdrop-blur lg:hidden">
+                {toolItems.map((item) => {
+                  const icon = item.icon;
+                  const key = item.label.toLowerCase() as "chat" | "notes" | "facts" | "stage";
+                  const Icon = icon;
+                  const active = (activePanel ?? "stage") === key;
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() =>
+                        setActivePanel((prev) =>
+                          prev === key ? "stage" : key
+                        )
+                      }
+                      className={`flex min-w-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[11px] transition ${
+                        active ? "bg-white/10 text-white" : "text-white/60 hover:text-white/90"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {activePanel !== "stage" && (
+                <div className="fixed inset-x-3 bottom-16 z-40 max-h-[56vh] overflow-y-auto rounded-3xl border border-white/15 bg-black/90 p-4 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] lg:hidden">
+                  {activePanel === "chat" && (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/55">Chat</p>
+                      <div className="mt-3 max-h-[34vh] space-y-2 overflow-y-auto pr-1">
+                        {chatMessages.length === 0 ? (
+                          <p className="text-sm text-white/60">No messages yet.</p>
+                        ) : (
+                          chatMessages.map((message) => (
+                            <div key={message.id} className="rounded-2xl border border-white/15 bg-white/5 px-3 py-2">
+                              <div className="flex items-center justify-between text-[11px] text-white/55">
+                                <span>{message.author}</span>
+                                <span>{message.timestamp}</span>
+                              </div>
+                              <p className="mt-1 text-sm text-white/90">{message.message}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <input
+                          value={chatInput}
+                          onChange={(event) => setChatInput(event.target.value)}
+                          placeholder="Send a message"
+                          className="flex-1 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white outline-none placeholder:text-white/45"
+                        />
+                        <button
+                          className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black"
+                          onClick={handleSendMessage}
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {activePanel === "notes" && (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/55">Notes</p>
+                      <div className="mt-3">
+                        <EditorContent editor={notesEditor} />
+                      </div>
+                    </div>
+                  )}
+                  {activePanel === "facts" && (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/55">Facts</p>
+                      <div className="mt-3 grid gap-2">
+                        <input
+                          value={factClaim}
+                          onChange={(event) => setFactClaim(event.target.value)}
+                          placeholder="Fact or claim"
+                          className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/45"
+                        />
+                        <input
+                          value={factSource}
+                          onChange={(event) => setFactSource(event.target.value)}
+                          placeholder="Source link"
+                          className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/45"
+                        />
+                        <button
+                          className="rounded-xl bg-white px-3 py-2 text-sm font-medium text-black"
+                          onClick={handleAddFact}
+                        >
+                          Add fact
+                        </button>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {facts.length === 0 ? (
+                          <p className="text-sm text-white/60">No facts added yet.</p>
+                        ) : (
+                          facts.map((fact) => (
+                            <div key={fact.id} className="rounded-2xl border border-white/15 bg-white/5 px-3 py-2">
+                              <p className="text-sm text-white">{fact.claim}</p>
+                              <p className="mt-1 text-xs text-white/55">{fact.source}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </main>
