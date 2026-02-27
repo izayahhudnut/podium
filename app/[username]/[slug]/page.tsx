@@ -401,6 +401,7 @@ export default function RoomPage() {
   const [chatInput, setChatInput] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestNameInput, setGuestNameInput] = useState("");
+  const [uidNonce, setUidNonce] = useState(0);
   const [canPublish, setCanPublish] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestQueued, setRequestQueued] = useState(false);
@@ -420,11 +421,16 @@ export default function RoomPage() {
   >([]);
   const [factClaim, setFactClaim] = useState("");
   const [factSource, setFactSource] = useState("");
+  const [aiGeneratingTopics, setAiGeneratingTopics] = useState(false);
+  const [aiFactChecksEnabled, setAiFactChecksEnabled] = useState(true);
   const [stageMembers, setStageMembers] = useState<Record<string, boolean>>({});
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const endRoomOnceRef = useRef(false);
   const isAdminRef = useRef(false);
   const stageMembersRef = useRef<Record<string, boolean>>({});
+  const aiFactCheckInFlightRef = useRef(false);
+  const aiFactIssueKeysRef = useRef(new Set<string>());
+  const uidConflictRetriesRef = useRef(0);
 
   const markRoomEnded = async (keepalive = false) => {
     if (!roomSlug || !usernameParam) {
@@ -505,12 +511,14 @@ export default function RoomPage() {
     };
 
     if (user?.id) {
-      uidRef.current = buildUid(`user-${user.id}-${sessionIdRef.current}`);
+      uidRef.current = buildUid(
+        `user-${user.id}-${sessionIdRef.current}-${uidNonce}`
+      );
       return;
     }
 
-    uidRef.current = buildUid(`guest-${sessionIdRef.current}`);
-  }, [user?.id]);
+    uidRef.current = buildUid(`guest-${sessionIdRef.current}-${uidNonce}`);
+  }, [uidNonce, user?.id]);
 
   useEffect(() => {
     const storedName = window.localStorage.getItem("podium-guest-name");
@@ -565,7 +573,7 @@ export default function RoomPage() {
     return () => {
       isMounted = false;
     };
-  }, [roomSlug, user?.id, usernameParam, guestName]);
+  }, [roomSlug, uidNonce, user?.id, usernameParam, guestName]);
 
   useEffect(() => {
     let isMounted = true;
@@ -769,7 +777,11 @@ export default function RoomPage() {
           return [...next, user];
         });
       } else {
-        user.audioTrack?.play();
+        setRemoteUsers((prev) => {
+          const next = prev.filter((item) => item.uid !== user.uid);
+          return [...next, user];
+        });
+        user.audioTrack?.stop();
       }
     };
 
@@ -913,6 +925,7 @@ export default function RoomPage() {
           return;
         }
         setMediaError(null);
+        uidConflictRetriesRef.current = 0;
         mediaAutoRetryCountRef.current = 0;
         setLocalAudioTrack(mic ?? null);
         setLocalVideoTrack(cam ?? null);
@@ -941,11 +954,25 @@ export default function RoomPage() {
           setCameraOn(false);
         }
       } catch (error: unknown) {
+        const errorMessage = String(getMediaErrorShape(error).message ?? "");
+        const isUidConflict =
+          errorMessage.includes("UID_CONFLICT") ||
+          String(error).includes("UID_CONFLICT");
+        if (isUidConflict) {
+          if (uidConflictRetriesRef.current < 3) {
+            uidConflictRetriesRef.current += 1;
+            setMediaError("Session conflict detected. Reconnecting...");
+            setUidNonce((prev) => prev + 1);
+            return;
+          }
+          setMediaError(
+            "Unable to join: duplicate session detected. Close other room tabs and retry."
+          );
+          return;
+        }
         const isDeviceNotFound = isMediaDeviceNotFoundError(error);
         const isPermissionDenied = isMediaPermissionError(error);
-        const message =
-          getMediaErrorShape(error).message ??
-          "Unable to access microphone or camera.";
+        const message = errorMessage || "Unable to access microphone or camera.";
         if (isPermissionDenied || isDeviceNotFound) {
           setMediaError(message);
           setMediaBlocked(true);
@@ -992,8 +1019,12 @@ export default function RoomPage() {
   }, [agoraTokens, canPublish, isAdmin, mediaBlocked, mediaRetryKey]);
 
   useEffect(() => {
-    localAudioTrack?.setEnabled(micOn);
-  }, [localAudioTrack, micOn]);
+    if (!localAudioTrack || !agoraTokens?.uid) {
+      return;
+    }
+    const localOnStage = Boolean(stageMembers[agoraTokens.uid]);
+    void localAudioTrack.setEnabled(localOnStage ? micOn : false);
+  }, [localAudioTrack, micOn, stageMembers, agoraTokens?.uid]);
 
   useEffect(() => {
     if (!localAudioTrack || !micOn) {
@@ -1065,6 +1096,21 @@ export default function RoomPage() {
   useEffect(() => {
     localVideoTrack?.setEnabled(cameraOn);
   }, [localVideoTrack, cameraOn]);
+
+  useEffect(() => {
+    if (!rtcClient || !agoraTokens?.uid) {
+      return;
+    }
+    rtcClient.remoteUsers.forEach((remoteUser) => {
+      const remoteOnStage = Boolean(stageMembers[String(remoteUser.uid)]);
+      const shouldHear = remoteOnStage;
+      if (shouldHear) {
+        remoteUser.audioTrack?.play();
+      } else {
+        remoteUser.audioTrack?.stop();
+      }
+    });
+  }, [rtcClient, agoraTokens?.uid, stageMembers, remoteUsers]);
 
   useEffect(() => {
     if (!localAudioTrack || !selectedAudioDevice) {
@@ -1392,6 +1438,112 @@ export default function RoomPage() {
     toast({ title: "Topics saved" });
   };
 
+  const handleGenerateTopics = async () => {
+    if (!isAdmin) {
+      toast({
+        title: "Host access required",
+        description: "Only the host can generate topics.",
+      });
+      return;
+    }
+    if (aiGeneratingTopics) {
+      return;
+    }
+
+    setAiGeneratingTopics(true);
+    try {
+      const response = await fetch("/api/ai/generate-topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomTitle: roomSlug ? roomSlug.replace(/-/g, " ") : "Debate",
+          existingTopics: topics.map((topic) => ({
+            title: topic.title,
+            minutes: topic.minutes,
+          })),
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === "string"
+            ? payload.error
+            : "Unable to generate topics."
+        );
+      }
+
+      const generated = (Array.isArray(payload?.topics) ? payload.topics : []) as Array<{
+        title?: unknown;
+        minutes?: unknown;
+      }>;
+      if (!generated.length) {
+        toast({
+          title: "No topics generated",
+          description: "Try again with a clearer room title.",
+        });
+        return;
+      }
+
+      const existingTitles = new Set(
+        topics.map((topic) => topic.title.trim().toLowerCase())
+      );
+
+      const toAdd: Array<{ title: string; minutes: number }> = generated
+        .map((item) => {
+          const title =
+            typeof item.title === "string" ? item.title.trim() : "";
+          const minutes = Math.min(
+            60,
+            Math.max(
+              1,
+              typeof item.minutes === "number" && Number.isFinite(item.minutes)
+                ? Number(item.minutes)
+                : 5
+            )
+          );
+          return { title, minutes };
+        })
+        .filter((item) => {
+          if (!item.title) {
+            return false;
+          }
+          const key = item.title.toLowerCase();
+          if (existingTitles.has(key)) {
+            return false;
+          }
+          existingTitles.add(key);
+          return true;
+        });
+
+      if (!toAdd.length) {
+        toast({
+          title: "No new topics",
+          description: "Generated topics were already in your list.",
+        });
+        return;
+      }
+
+      setTopics((prev) => [
+        ...prev,
+        ...toAdd.map((item) => ({
+          id: crypto.randomUUID(),
+          title: item.title,
+          minutes: item.minutes,
+        })),
+      ]);
+      toast({ title: "Topics generated", description: `${toAdd.length} added.` });
+    } catch (error) {
+      toast({
+        title: "AI generation failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setAiGeneratingTopics(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!chatInput.trim() || !rtmClient || !agoraTokens) {
       return;
@@ -1405,18 +1557,6 @@ export default function RoomPage() {
         agoraTokens.channel,
         JSON.stringify({ type: "chat", author, message })
       );
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}`,
-          author,
-          message,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
     } catch {
       toast({ title: "Message failed", description: "Please try again." });
     }
@@ -1456,13 +1596,9 @@ export default function RoomPage() {
         agoraTokens.channel,
         JSON.stringify({ type: "approve_join", uid })
       );
-      await rtmClient.publish(
-        agoraTokens.channel,
-        JSON.stringify({ type: "stage_update", uid, onStage: true })
-      );
       setApprovedParticipants((prev) => ({ ...prev, [uid]: true }));
       setPendingRequests((prev) => prev.filter((id) => id !== uid));
-      setStageMembers((prev) => ({ ...prev, [uid]: true }));
+      setStageMembers((prev) => ({ ...prev, [uid]: false }));
     } catch {
       toast({ title: "Approval failed", description: "Please try again." });
     }
@@ -1777,6 +1913,227 @@ export default function RoomPage() {
   }, [stageMembers]);
 
   useEffect(() => {
+    aiFactIssueKeysRef.current.clear();
+  }, [roomSlug]);
+
+  useEffect(() => {
+    if (!aiFactChecksEnabled || !agoraTokens) {
+      return;
+    }
+    if (typeof window === "undefined" || typeof MediaRecorder === "undefined") {
+      return;
+    }
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const captureSnippet = async () => {
+      const streamTracks: MediaStreamTrack[] = [];
+      const localTrack = (
+        localAudioTrack as {
+          getMediaStreamTrack?: () => MediaStreamTrack | undefined;
+        } | null
+      )?.getMediaStreamTrack?.();
+      if (localTrack) {
+        streamTracks.push(localTrack);
+      }
+
+      for (const user of remoteUsers) {
+        const remoteTrack = (
+          user.audioTrack as {
+            getMediaStreamTrack?: () => MediaStreamTrack | undefined;
+          } | null
+        )?.getMediaStreamTrack?.();
+        if (remoteTrack) {
+          streamTracks.push(remoteTrack);
+        }
+      }
+
+      let stream: MediaStream | null = null;
+      let cleanup: (() => void) | null = null;
+
+      if (streamTracks.length > 0) {
+        const context = new AudioContext();
+        const destination = context.createMediaStreamDestination();
+        const sources = streamTracks.map((track) =>
+          context.createMediaStreamSource(new MediaStream([track]))
+        );
+        for (const source of sources) {
+          source.connect(destination);
+        }
+        stream = destination.stream;
+        cleanup = () => {
+          for (const source of sources) {
+            source.disconnect();
+          }
+          void context.close();
+        };
+      } else {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        stream = fallbackStream;
+        cleanup = () => {
+          fallbackStream.getTracks().forEach((track) => track.stop());
+        };
+      }
+
+      try {
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          const chunks: BlobPart[] = [];
+          const recorder = new MediaRecorder(stream!, { mimeType: "audio/webm" });
+
+          recorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              chunks.push(event.data);
+            }
+          };
+          recorder.onerror = () => {
+            reject(new Error("MediaRecorder failed"));
+          };
+          recorder.onstop = () => {
+            resolve(new Blob(chunks, { type: "audio/webm" }));
+          };
+
+          recorder.start();
+          window.setTimeout(() => {
+            if (recorder.state !== "inactive") {
+              recorder.stop();
+            }
+          }, 7000);
+        });
+        return blob;
+      } finally {
+        cleanup?.();
+      }
+    };
+
+    const runFactCheck = async () => {
+      if (cancelled || aiFactCheckInFlightRef.current) {
+        return;
+      }
+      aiFactCheckInFlightRef.current = true;
+      try {
+        const audio = await captureSnippet();
+        if (cancelled || audio.size === 0) {
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("audio", audio, "snippet.webm");
+        formData.append(
+          "roomTitle",
+          roomSlug ? roomSlug.replace(/-/g, " ") : "Debate room"
+        );
+        formData.append("activeTopic", activeTopic?.title ?? "");
+
+        const response = await fetch("/api/ai/fact-check-audio", {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          return;
+        }
+        const payload = await response.json();
+        const issues = Array.isArray(payload?.issues) ? payload.issues : [];
+        if (!issues.length || cancelled) {
+          return;
+        }
+
+        const now = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const nextFacts: {
+          id: string;
+          claim: string;
+          source: string;
+          submittedBy: string;
+        }[] = [];
+        const nextMessages: {
+          id: string;
+          author: string;
+          message: string;
+          timestamp: string;
+        }[] = [];
+
+        for (const issue of issues as Array<{
+          claim?: unknown;
+          correction?: unknown;
+          confidence?: unknown;
+        }>) {
+          const claim = typeof issue.claim === "string" ? issue.claim.trim() : "";
+          const correction =
+            typeof issue.correction === "string" ? issue.correction.trim() : "";
+          const confidence =
+            typeof issue.confidence === "number" ? issue.confidence : 0;
+          if (!claim || !correction || confidence < 0.8) {
+            continue;
+          }
+          const dedupeKey = `${claim.toLowerCase()}::${correction.toLowerCase()}`;
+          if (aiFactIssueKeysRef.current.has(dedupeKey)) {
+            continue;
+          }
+          aiFactIssueKeysRef.current.add(dedupeKey);
+          nextFacts.push({
+            id: crypto.randomUUID(),
+            claim: `${claim} -> ${correction}`,
+            source: "AI fact check",
+            submittedBy: "AI Fact Checker",
+          });
+          nextMessages.push({
+            id: crypto.randomUUID(),
+            author: "AI Fact Checker",
+            message: `Possible issue: "${claim}". Suggested correction: ${correction} (${Math.round(
+              confidence * 100
+            )}% confidence).`,
+            timestamp: now,
+          });
+        }
+
+        if (nextFacts.length > 0) {
+          setFacts((prev) => [...prev, ...nextFacts]);
+          setChatMessages((prev) => [...prev, ...nextMessages]);
+          toast({
+            title: "AI flagged a factual issue",
+            description: `${nextFacts.length} item(s) added to Facts.`,
+          });
+        }
+      } catch {
+        return;
+      } finally {
+        aiFactCheckInFlightRef.current = false;
+      }
+    };
+
+    const tick = () => {
+      timeoutId = window.setTimeout(async () => {
+        await runFactCheck();
+        if (!cancelled) {
+          tick();
+        }
+      }, 30000);
+    };
+
+    tick();
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    activeTopic?.title,
+    aiFactChecksEnabled,
+    agoraTokens,
+    localAudioTrack,
+    remoteUsers,
+    roomSlug,
+    toast,
+  ]);
+
+  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -1790,7 +2147,7 @@ export default function RoomPage() {
       {needsGuestName && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
-            <h2 className="text-2xl font-semibold">
+            <h2 className="text-2xl font-semibold text-[#111111]">
               Join {roomSlug ? `"${roomSlug.replace(/-/g, " ")}"` : "this debate"}{" "}
               as guest
             </h2>
@@ -1801,7 +2158,7 @@ export default function RoomPage() {
               value={guestNameInput}
               onChange={(event) => setGuestNameInput(event.target.value)}
               placeholder="Your name"
-              className="mt-4 w-full rounded-2xl border border-[#ECECEC] px-4 py-2 text-base outline-none"
+              className="mt-4 w-full rounded-2xl border border-[#ECECEC] px-4 py-2 text-base text-[#111111] outline-none placeholder:text-black/45"
             />
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
@@ -2266,10 +2623,14 @@ export default function RoomPage() {
 
                     {isAdmin && (
                       <div className="flex items-center gap-3">
-                        <button className="flex items-center justify-center rounded-full bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#111111] transition hover:bg-[#ECECEC]">
+                        <button
+                          className="flex items-center justify-center rounded-full bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#111111] transition hover:bg-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={handleGenerateTopics}
+                          disabled={aiGeneratingTopics}
+                        >
                           <span className="inline-flex items-center gap-2">
                             <HiSparkles className="h-3.5 w-3.5 text-purple-600" />
-                            Generate
+                            {aiGeneratingTopics ? "Generating..." : "Generate"}
                           </span>
                         </button>
                         <button
@@ -2434,11 +2795,22 @@ export default function RoomPage() {
                         </p>
                       </div>
                       <button
-                        className="flex h-6 w-11 items-center rounded-full border border-[#ECECEC] bg-[#ECECEC] p-1"
+                        className={`flex h-6 w-11 items-center rounded-full border p-1 transition ${
+                          aiFactChecksEnabled
+                            ? "border-emerald-400/50 bg-emerald-500"
+                            : "border-[#ECECEC] bg-[#ECECEC]"
+                        }`}
                         aria-label="Toggle AI fact checks"
                         type="button"
+                        onClick={() =>
+                          setAiFactChecksEnabled((enabled) => !enabled)
+                        }
                       >
-                        <span className="h-4 w-4 rounded-full bg-white shadow-sm" />
+                        <span
+                          className={`h-4 w-4 rounded-full bg-white shadow-sm transition ${
+                            aiFactChecksEnabled ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
                       </button>
                     </div>
                   </div>
@@ -2774,7 +3146,7 @@ export default function RoomPage() {
           </div>
         </div>
 
-        <main className="flex-1 bg-black px-0 py-0 lg:bg-transparent lg:px-10 lg:py-6">
+        <main className="flex-1 bg-black px-0 py-0 lg:px-10 lg:py-6">
           {waitingForApproval ? (
             <div className="flex min-h-[70vh] items-center justify-center px-6 py-6 lg:px-0 lg:py-0">
               <div className="text-center">
@@ -2795,7 +3167,7 @@ export default function RoomPage() {
             </div>
           ) : (
             <>
-              <div className="hidden lg:block">
+              <div className="hidden">
                 <SessionHeader
                   showTopics={activePanel === "topics"}
                   onToggleTopics={() =>
@@ -2834,148 +3206,167 @@ export default function RoomPage() {
                 )}
 
                 {!isLoading && agoraTokens && (
-                  <div className="grid gap-6">
-                    {running && activeTopic && (
-                      <div className="mx-4 rounded-2xl border border-white/20 bg-black/65 px-4 py-3 shadow-[0_6px_18px_rgba(0,0,0,0.25)] lg:mx-0 lg:border-[#ECECEC] lg:bg-white lg:shadow-[0_6px_18px_rgba(0,0,0,0.06)]">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.22em] text-white/55 lg:text-black/45">
-                              Plan {activeIndex !== null ? activeIndex + 1 : 1}/
-                              {topics.length}
-                            </p>
-                            <p className="mt-1 text-sm font-medium text-white lg:text-[#111111]">
-                              {activeTopic.title}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-2xl font-medium tabular-nums text-white lg:text-[#111111]">
-                              {formatTime(remainingSeconds)}
-                            </span>
-                            <button
-                              className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-medium text-white transition hover:bg-white/20 lg:border-[#ECECEC] lg:bg-[#F8F8F8] lg:text-[#111111] lg:hover:bg-[#ECECEC]"
-                              onClick={skipTopic}
-                            >
-                              Skip
-                            </button>
-                          </div>
-                        </div>
+                  <div className="relative mx-2 grid gap-4 lg:mx-0 lg:grid-cols-[1.15fr_0.85fr]">
+                    <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-2 lg:inset-x-3">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/70 px-2.5 py-1.5 text-xs backdrop-blur">
+                        <img src="/small-logo.svg" alt="Podium" className="h-6 w-6 rounded-full" />
+                        <span className="max-w-[160px] truncate font-semibold">
+                          {roomSlug ? roomSlug.replace(/-/g, " ") : "Live Debate"}
+                        </span>
+                        <span className="rounded-full bg-[#ff2d6b] px-2 py-0.5 text-[10px] font-semibold text-white">
+                          LIVE
+                        </span>
                       </div>
-                    )}
-                    <div className="rounded-none bg-transparent lg:rounded-3xl lg:bg-white">
-                      <div className="mt-1">
-                        {stageVisibleParticipants.length > 0 ? (
-                          <AgoraVideoGrid
-                            localOnStage={stageVisibleParticipants.some(
-                              (participant) => participant.isLocal
-                            )}
-                            localTrack={
-                              stageVisibleParticipants.some(
-                                (participant) => participant.isLocal
-                              )
-                                ? localVideoTrack
-                                : null
-                            }
-                            localName={
-                              user?.fullName ||
-                              user?.username ||
-                              guestName ||
-                              "You"
-                            }
-                            localAvatarUrl={user?.imageUrl ?? null}
-                            remoteUsers={remoteUsers
-                              .filter((user) =>
-                                stageVisibleParticipants.some(
-                                  (participant) =>
-                                    participant.id === String(user.uid)
-                                )
-                              )
-                              .map((participant) => ({
-                                uid: String(participant.uid),
-                                name:
-                                  participantNames[String(participant.uid)] ??
-                                  String(participant.uid),
-                                avatarUrl: null,
-                                track: participant.videoTrack ?? null,
-                              }))}
-                            cameraOn={
-                              stageVisibleParticipants.some(
-                                (participant) => participant.isLocal
-                              )
-                                ? cameraOn
-                                : false
-                            }
-                            micMuted={!micOn}
-                            localAudioLevel={localAudioLevel}
-                          />
-                        ) : (
-                          <div className="flex h-full min-h-[420px] items-center justify-center rounded-none border-0 bg-black lg:rounded-3xl lg:border lg:border-[#ECECEC] lg:bg-[radial-gradient(circle_at_top,#ffffff,#F8F8F8)]">
-                            <div className="text-center">
-                              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/25 bg-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.2)] lg:border-[#ECECEC] lg:bg-white lg:shadow-[0_15px_35px_rgba(0,0,0,0.08)]">
-                                <FiUsers className="h-6 w-6 text-white/80 lg:text-black/70" />
-                              </div>
-                              <p className="mt-4 text-2xl font-semibold text-white lg:text-[#111111]">
-                                Stage is empty
-                              </p>
-                              <p className="mt-2 text-sm text-white/70 lg:text-black/55">
-                                Add someone to the stage to start the debate.
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full border border-white/15 bg-black/70 px-2.5 py-1.5 text-[11px] text-white/90">
+                          {stageVisibleParticipants.length} on stage
+                        </span>
+                        <button
+                          className="rounded-full border border-white/20 bg-black/70 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-black"
+                          onClick={() => handleLeaveRoom()}
+                        >
+                          Leave
+                        </button>
                       </div>
                     </div>
 
-                    {isAdmin && (
-                      <div className="hidden rounded-3xl border border-[#ECECEC] bg-white p-4 shadow-[0_6px_18px_rgba(0,0,0,0.05)] lg:block">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs uppercase tracking-[0.3em] text-black/45">
-                            Participants
-                          </p>
-                          <span className="text-xs text-black/45">
-                            {stageParticipants.length} total
-                          </span>
-                        </div>
-                        <div className="mt-4 grid gap-2 text-sm">
-                          {stageParticipants.map((participant) => {
-                            const onStage = stageMembers[participant.id] ?? false;
-                            return (
-                              <div
-                                key={participant.id}
-                                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-2.5 ${
-                                  onStage
-                                    ? "border-[#d7e7dd] bg-[#F3FAF6]"
-                                    : "border-[#ECECEC] bg-[#FCFCFC]"
-                                }`}
+                    <div className="rounded-3xl border border-white/15 bg-black/55 p-2 pt-16 backdrop-blur">
+                      {running && activeTopic && (
+                        <div className="mb-3 rounded-2xl border border-white/20 bg-black/60 px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.18em] text-white/60">
+                                Plan {activeIndex !== null ? activeIndex + 1 : 1}/{topics.length}
+                              </p>
+                              <p className="mt-1 text-sm font-medium text-white">
+                                {activeTopic.title}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl font-semibold tabular-nums text-white">
+                                {formatTime(remainingSeconds)}
+                              </span>
+                              <button
+                                className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-medium text-white transition hover:bg-white/20"
+                                onClick={skipTopic}
                               >
-                                <div className="flex min-w-[180px] items-center gap-3">
-                                  {participant.avatarUrl ? (
-                                    <img
-                                      src={participant.avatarUrl}
-                                      alt={participant.name}
-                                      className="h-8 w-8 rounded-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECECEC] text-xs font-semibold text-black/60">
-                                      {getInitials(participant.name)}
-                                    </div>
-                                  )}
-                                  <div>
-                                    <p className="text-sm font-medium text-[#111111]">
-                                      {participant.name}
-                                      {participant.isLocal ? " (you)" : ""}
-                                    </p>
-                                    <p className="text-xs text-black/45">
-                                      {onStage ? "On stage" : "Audience"}
-                                    </p>
+                                Skip
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {stageVisibleParticipants.length > 0 ? (
+                        <AgoraVideoGrid
+                          localOnStage={stageVisibleParticipants.some(
+                            (participant) => participant.isLocal
+                          )}
+                          localTrack={
+                            stageVisibleParticipants.some(
+                              (participant) => participant.isLocal
+                            )
+                              ? localVideoTrack
+                              : null
+                          }
+                          localName={
+                            user?.fullName ||
+                            user?.username ||
+                            guestName ||
+                            "You"
+                          }
+                          localAvatarUrl={user?.imageUrl ?? null}
+                          remoteUsers={remoteUsers
+                            .filter((user) =>
+                              stageVisibleParticipants.some(
+                                (participant) =>
+                                  participant.id === String(user.uid)
+                              )
+                            )
+                            .map((participant) => ({
+                              uid: String(participant.uid),
+                              name:
+                                participantNames[String(participant.uid)] ??
+                                String(participant.uid),
+                              avatarUrl: null,
+                              track: participant.videoTrack ?? null,
+                            }))}
+                          cameraOn={
+                            stageVisibleParticipants.some(
+                              (participant) => participant.isLocal
+                            )
+                              ? cameraOn
+                              : false
+                          }
+                          micMuted={!micOn}
+                          localAudioLevel={localAudioLevel}
+                        />
+                      ) : (
+                        <div className="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-white/15 bg-black">
+                          <div className="text-center">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/25 bg-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
+                              <FiUsers className="h-6 w-6 text-white/80" />
+                            </div>
+                            <p className="mt-4 text-2xl font-semibold text-white">
+                              Stage is empty
+                            </p>
+                            <p className="mt-2 text-sm text-white/70">
+                              Add someone to the stage to start the debate.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-3xl border border-white/15 bg-black/60 p-3 backdrop-blur">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-[0.24em] text-white/60">
+                          Participants
+                        </p>
+                        <span className="text-xs text-white/65">
+                          {stageParticipants.length} total
+                        </span>
+                      </div>
+                      <div className="mt-3 grid max-h-[62vh] grid-cols-2 gap-3 overflow-y-auto pr-1">
+                        {stageParticipants.map((participant) => {
+                          const onStage = stageMembers[participant.id] ?? false;
+                          return (
+                            <div
+                              key={participant.id}
+                              className={`rounded-2xl border p-3 ${
+                                onStage
+                                  ? "border-cyan-400/60 bg-cyan-500/10"
+                                  : "border-white/15 bg-white/5"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {participant.avatarUrl ? (
+                                  <img
+                                    src={participant.avatarUrl}
+                                    alt={participant.name}
+                                    className="h-9 w-9 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
+                                    {getInitials(participant.name)}
                                   </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium text-white">
+                                    {participant.name}
+                                    {participant.isLocal ? " (you)" : ""}
+                                  </p>
+                                  <p className="text-[11px] text-white/60">
+                                    {onStage ? "On stage" : "Audience"}
+                                  </p>
                                 </div>
-                                {isAdmin && !participant.isLocal && (
-                                  <div className="flex items-center gap-2 text-xs">
+                              </div>
+                              {isAdmin && !participant.isLocal && (
+                                <div className="mt-3 flex items-center gap-2">
                                   <button
-                                    className={`group relative inline-flex items-center justify-center rounded-full border px-3 py-1 text-[10px] font-medium transition ${
+                                    className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
                                       onStage
-                                        ? "border-[#ffd7d7] bg-[#fff5f5] text-[#c0392b] hover:bg-[#ffeaea]"
-                                        : "border-[#d7e7dd] bg-[#F2FBF6] text-emerald-700 hover:bg-[#e8f7ef]"
+                                        ? "bg-red-500/80 text-white hover:bg-red-500"
+                                        : "bg-emerald-500/80 text-white hover:bg-emerald-500"
                                     }`}
                                     onClick={() =>
                                       handleSetStageForParticipant(
@@ -2983,35 +3374,23 @@ export default function RoomPage() {
                                         !onStage
                                       )
                                     }
-                                    aria-label={
-                                      onStage
-                                        ? "Remove from stage"
-                                        : "Add to stage"
-                                    }
                                   >
                                     {onStage ? "Remove" : "Add"}
-                                    <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
-                                      {onStage ? "Remove from stage" : "Add to stage"}
-                                    </span>
                                   </button>
                                   <button
-                                    className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECECEC] text-black/60 transition hover:text-[#111111]"
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:text-white"
                                     onClick={() => handleMuteParticipant(participant.id)}
                                     aria-label="Mute participant"
                                   >
-                                    <FiMicOff className="h-4 w-4" />
-                                    <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
-                                      Mute participant
-                                    </span>
+                                    <FiMicOff className="h-3.5 w-3.5" />
                                   </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 

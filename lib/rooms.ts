@@ -56,16 +56,21 @@ export async function getRoomBySlug(
 }
 
 export async function getPublicRooms(): Promise<Room[]> {
-  return supabaseRequest<Room[]>("rooms", {
-    query: {
-      select:
-        "id,owner_id,owner_username,title,slug,template,livekit_room,status,is_public,header_image_url,created_at,ended_at",
-      is_public: "eq.true",
-      status: "eq.active",
-      order: "created_at.desc",
-      limit: "6",
-    },
-  });
+  try {
+    return await supabaseRequest<Room[]>("rooms", {
+      query: {
+        select:
+          "id,owner_id,owner_username,title,slug,template,livekit_room,status,is_public,header_image_url,created_at,ended_at",
+        is_public: "eq.true",
+        status: "eq.active",
+        order: "created_at.desc",
+        limit: "6",
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load public rooms", error);
+    return [];
+  }
 }
 
 export async function createRoom(input: CreateRoomInput): Promise<Room> {

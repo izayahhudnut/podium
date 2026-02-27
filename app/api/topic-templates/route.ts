@@ -8,45 +8,68 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-  const fallbackAuth = getAuth(request);
-  const resolvedUserId = userId ?? fallbackAuth.userId;
+  try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        {
+          error:
+            "Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to enable topic template creation.",
+        },
+        { status: 503 }
+      );
+    }
 
-  if (!resolvedUserId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId } = await auth();
+    const fallbackAuth = getAuth(request);
+    const resolvedUserId = userId ?? fallbackAuth.userId;
+
+    if (!resolvedUserId) {
+      return NextResponse.json({ templates: [] });
+    }
+
+    const templates = await getTopicTemplatesByOwner(resolvedUserId);
+    return NextResponse.json({ templates });
+  } catch (error) {
+    console.error("[topic-templates:GET] failed", error);
+    return NextResponse.json({ templates: [] });
   }
-
-  const templates = await getTopicTemplatesByOwner(resolvedUserId);
-  return NextResponse.json({ templates });
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  const fallbackAuth = getAuth(request);
-  const resolvedUserId = userId ?? fallbackAuth.userId;
-  const resolvedUsername = fallbackAuth.sessionClaims?.username as
-    | string
-    | undefined;
+  try {
+    const { userId } = await auth();
+    const fallbackAuth = getAuth(request);
+    const resolvedUserId = userId ?? fallbackAuth.userId;
+    const resolvedUsername = fallbackAuth.sessionClaims?.username as
+      | string
+      | undefined;
 
-  if (!resolvedUserId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!resolvedUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await request.json();
+    const title =
+      typeof payload?.title === "string" ? payload.title.trim() : "";
+    const topics = Array.isArray(payload?.topics) ? payload.topics : [];
+
+    if (!title) {
+      return NextResponse.json({ error: "Invalid title" }, { status: 400 });
+    }
+
+    const template = await createTopicTemplate({
+      ownerId: resolvedUserId,
+      ownerUsername: resolvedUsername ?? "unknown",
+      title,
+      topics,
+    });
+
+    return NextResponse.json({ template });
+  } catch (error) {
+    console.error("[topic-templates:POST] failed", error);
+    return NextResponse.json(
+      { error: "Unable to create topic template" },
+      { status: 500 }
+    );
   }
-
-  const payload = await request.json();
-  const title =
-    typeof payload?.title === "string" ? payload.title.trim() : "";
-  const topics = Array.isArray(payload?.topics) ? payload.topics : [];
-
-  if (!title) {
-    return NextResponse.json({ error: "Invalid title" }, { status: 400 });
-  }
-
-  const template = await createTopicTemplate({
-    ownerId: resolvedUserId,
-    ownerUsername: resolvedUsername ?? "unknown",
-    title,
-    topics,
-  });
-
-  return NextResponse.json({ template });
 }

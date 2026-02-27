@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   const expireSeconds = 60 * 60;
-  const rtcToken = RtcTokenBuilder.buildTokenWithUid(
+  const rtcToken = RtcTokenBuilder.buildTokenWithUserAccount(
     appId,
     appCertificate,
     channel,

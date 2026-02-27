@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@clerk/nextjs";
 
@@ -548,6 +548,9 @@ function RoomsPageContent() {
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="w-full max-w-2xl overflow-hidden rounded-[28px] border border-[#ECECEC] bg-white p-0">
+          <DialogDescription className="sr-only">
+            Configure room details, template, and visibility before creating a debate room.
+          </DialogDescription>
           <div className="relative h-40 border-b border-[#ECECEC] bg-[#F8F8F8]">
             {headerImageUrl && (
               <img
@@ -564,6 +567,7 @@ function RoomsPageContent() {
                 accept="image/*"
                 className="hidden"
                 onChange={async (event) => {
+                  const input = event.currentTarget;
                   const file = event.target.files?.[0];
                   if (!file) {
                     return;
@@ -579,7 +583,9 @@ function RoomsPageContent() {
                     });
                   } finally {
                     setIsProcessingHeader(false);
-                    event.currentTarget.value = "";
+                    if (input) {
+                      input.value = "";
+                    }
                   }
                 }}
               />
@@ -635,9 +641,14 @@ function RoomsPageContent() {
                 </label>
                 <Select
                   value={templateId || "none"}
-                  onValueChange={(value) =>
-                    setTemplateId(value === "none" ? "" : value)
-                  }
+                  onValueChange={(value) => {
+                    if (value === "create-template") {
+                      setShowModal(false);
+                      router.push("/topics?create=1");
+                      return;
+                    }
+                    setTemplateId(value === "none" ? "" : value);
+                  }}
                   disabled={templatesLoading}
                 >
                   <SelectTrigger className="h-10 rounded-2xl border border-[#ECECEC] bg-transparent px-3 text-sm text-[#111111] shadow-none [&>svg]:text-[#111111]/70">
@@ -649,12 +660,29 @@ function RoomsPageContent() {
                     />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border border-[#ECECEC] bg-white text-[#111111] shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
-                    <SelectItem value="none">No template</SelectItem>
+                    <SelectItem
+                      value="none"
+                      className="text-[#111111] focus:bg-[#F3F4F6] focus:text-[#111111]"
+                    >
+                      No template
+                    </SelectItem>
                     {topicTemplates.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        className="text-[#111111] focus:bg-[#F3F4F6] focus:text-[#111111]"
+                      >
                         {item.title}
                       </SelectItem>
                     ))}
+                    {!templatesLoading && topicTemplates.length === 0 && (
+                      <SelectItem
+                        value="create-template"
+                        className="text-[#111111] focus:bg-[#F3F4F6] focus:text-[#111111]"
+                      >
+                        + Create template
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-[#111111]/40">
