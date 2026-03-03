@@ -57,15 +57,15 @@ const Hero: React.FC = () => {
                 </p>
                 <Image
                     src={heroDetails.centerImageSrc}
-                    width={272}
-                    height={240}
+                    width={236}
+                    height={208}
                     quality={100}
-                    sizes="(max-width: 768px) 62vw, 272px"
+                    sizes="(max-width: 768px) 52vw, 236px"
                     priority={true}
                     unoptimized={true}
                     alt="app mockup"
                     draggable={false}
-                    className='relative mt-8 md:mt-12 mx-auto z-10 w-[58vw] max-w-[272px]'
+                    className='relative mt-8 md:mt-12 mx-auto z-10 w-[36vw] max-w-[170px] md:w-[52vw] md:max-w-[236px]'
                     style={{
                         animation: "heroImageIn 0.8s ease-out both, heroImageFloat 4.5s ease-in-out infinite",
                         animationDelay: "0.7s, 1.6s",

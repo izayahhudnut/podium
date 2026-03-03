@@ -6,13 +6,8 @@ const CTA: React.FC = () => {
     return (
         <section
             id="cta"
-            className="relative overflow-hidden bg-[#0F0D13] py-20 md:py-24"
-            style={{
-                backgroundImage:
-                    "repeating-linear-gradient(to right, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px), repeating-linear-gradient(to bottom, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px)",
-            }}
+            className="relative overflow-hidden bg-[#0F0D13] py-28 md:py-36"
         >
-            <div className="pointer-events-none absolute inset-0 bg-[#171717]/20" />
             <Container>
                 <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center text-white">
                     <h2 className="text-3xl font-bold leading-tight md:text-5xl">Get Started Today</h2>
