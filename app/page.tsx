@@ -1,8 +1,7 @@
 import Hero from "@/components/landing/Hero";
-import Logos from "@/components/landing/Logos";
 import Benefits from "@/components/landing/Benefits/Benefits";
+import CTA from "@/components/landing/CTA";
 import Container from "@/components/landing/Container";
-import Section from "@/components/landing/Section";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -15,11 +14,12 @@ const LandingPage = async () => {
   return (
     <>
       <Hero />
-      <Logos />
-      <Container>
-        <Benefits />
-
-      </Container>
+      <div className="w-full bg-[#0F0D13]">
+        <Container>
+          <Benefits />
+        </Container>
+      </div>
+      <CTA />
     </>
   );
 };

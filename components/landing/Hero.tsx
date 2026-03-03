@@ -1,44 +1,75 @@
 import React from 'react';
 import Image from 'next/image';
 
-import WaitlistForm from "@/app/components/WaitlistForm";
 import { heroDetails } from "@/components/landing/data/hero";
+import FloatingLines from "@/components/landing/FloatingLines";
 
 const Hero: React.FC = () => {
+    const heroTitleWords = "Bring Your Conversations to the Podium.".split(" ");
+
     return (
         <section
             id="hero"
-            className="relative flex items-center justify-center pb-0 pt-32 md:pt-40 px-5"
+            className="relative flex items-center justify-center overflow-visible pb-0 pt-20 md:pt-24 px-5"
             style={{
-                backgroundColor: "hsl(var(--hero-background))",
+                backgroundColor: "#0F0D13",
                 backgroundImage:
-                    "repeating-linear-gradient(to right, rgba(0,0,0,0.045) 0 1px, transparent 1px 44px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.045) 0 1px, transparent 1px 44px)",
-                WebkitMaskImage:
-                    "radial-gradient(ellipse 60% 55% at 50% 50%, black 0%, black 55%, transparent 100%)",
-                maskImage:
-                    "radial-gradient(ellipse 60% 55% at 50% 50%, black 0%, black 55%, transparent 100%)",
+                    "repeating-linear-gradient(to right, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px), repeating-linear-gradient(to bottom, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px)",
             }}
         >
-
-            <div className="absolute left-0 right-0 bottom-0 backdrop-blur-[2px] h-40 bg-gradient-to-b from-transparent via-[rgba(233,238,255,0.5)] to-[rgba(202,208,230,0.5)]">
+            <div className="pointer-events-none absolute inset-0 z-[1] opacity-80">
+                <FloatingLines
+                    enabledWaves={["top", "middle", "bottom"]}
+                    lineCount={5}
+                    lineDistance={5}
+                    bendRadius={5}
+                    bendStrength={-0.5}
+                    interactive={false}
+                    parallax={true}
+                    linesGradient={["#e947f5", "#2f4ba2", "#9b8cff"]}
+                />
             </div>
+            <div className="pointer-events-none absolute inset-0 z-[2] bg-[#171717]/20" />
 
-            <div className="text-center">
-                <h1 className="text-4xl md:text-6xl md:leading-tight font-bold text-black max-w-lg md:max-w-2xl mx-auto">{heroDetails.heading}</h1>
-                <p className="mt-4 text-black max-w-lg mx-auto">{heroDetails.subheading}</p>
-                <div className="mt-6 flex flex-col sm:flex-row items-center sm:gap-4 w-fit mx-auto">
-                    <WaitlistForm variant="light" />
-                </div>
+            <div className="relative z-10 text-center">
+                <h1 className="mx-auto flex max-w-[920px] flex-wrap justify-center gap-x-3 gap-y-2 px-1 text-4xl font-bold leading-[1.15] text-white md:text-6xl md:leading-[1.1]">
+                    {heroTitleWords.map((word, index) => (
+                        <span
+                            key={`${word}-${index}`}
+                            className="whitespace-nowrap"
+                            style={{
+                                animation: "heroWordIn 0.55s ease-out both",
+                                animationDelay: `${index * 0.06}s`,
+                            }}
+                        >
+                            {word}
+                        </span>
+                    ))}
+                </h1>
+                <p
+                    className="mx-auto mt-4 max-w-2xl text-base text-white/75 md:text-lg"
+                    style={{
+                        animation: "heroWordIn 0.6s ease-out both",
+                        animationDelay: "0.55s",
+                    }}
+                >
+                    The Stage for Conversations That Matter.
+                </p>
                 <Image
                     src={heroDetails.centerImageSrc}
-                    width={384}
-                    height={340}
+                    width={272}
+                    height={240}
                     quality={100}
-                    sizes="(max-width: 768px) 100vw, 384px"
+                    sizes="(max-width: 768px) 62vw, 272px"
                     priority={true}
                     unoptimized={true}
                     alt="app mockup"
-                    className='relative mt-12 md:mt-16 mx-auto z-10'
+                    draggable={false}
+                    className='relative mt-8 md:mt-12 mx-auto z-10 w-[58vw] max-w-[272px]'
+                    style={{
+                        animation: "heroImageIn 0.8s ease-out both, heroImageFloat 4.5s ease-in-out infinite",
+                        animationDelay: "0.7s, 1.6s",
+                    }}
                 />
             </div>
         </section>

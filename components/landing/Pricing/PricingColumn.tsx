@@ -24,7 +24,7 @@ const PricingColumn: React.FC<Props> = ({ tier, highlight }: Props) => {
                     {typeof price === 'number' && <span className="text-lg font-normal text-gray-600">/mo</span>}
                 </p>
                 <Link
-                    href="#cta"
+                    href="/waitlist"
                     className={clsx("w-full py-3 px-4 rounded-full transition-colors text-center", { "bg-primary hover:bg-primary-accent": highlight, "bg-hero-background hover:bg-gray-200": !highlight })}
                 >
                     Join waitlist

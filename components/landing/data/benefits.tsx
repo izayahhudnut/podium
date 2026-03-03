@@ -31,7 +31,7 @@ export const benefits: IBenefit[] = [
         icon: <FiTarget size={26} />,
       },
     ],
-    imageSrc: "/images/mockup-1.webp",
+    imageSrc: "/debate.svg",
   },
   {
     title: "Go live in minutes",
@@ -54,29 +54,29 @@ export const benefits: IBenefit[] = [
         icon: <FiBarChart2 size={26} />,
       },
     ],
-    imageSrc: "/images/mockup-2.webp",
+    imageSrc: "/factcheck.svg",
   },
   {
-    title: "Stay on track",
+    title: "Practice mode",
     description:
-      "Templates, timers, and insights keep every debate running smoothly.",
+      "Practice a debate or speech before you go live. Set your goal and get real-time assistance while you speak.",
     bullets: [
       {
-        title: "Reusable formats",
-        description: "Save structures for recurring debate styles.",
+        title: "Goal-based practice",
+        description: "Enter what you want to improve and tailor each practice session to that outcome.",
         icon: <FiClipboard size={26} />,
       },
       {
-        title: "Real-time timers",
-        description: "Track speaking time with clear visual cues.",
+        title: "Live coaching prompts",
+        description: "Get real-time guidance during delivery to improve clarity, pacing, and structure.",
         icon: <FiClock size={26} />,
       },
       {
-        title: "Post-session insights",
-        description: "Review performance and improve the next debate.",
+        title: "Debate and speech prep",
+        description: "Rehearse both formal speeches and debate rounds with feedback before the real session.",
         icon: <FiBarChart2 size={26} />,
       },
     ],
-    imageSrc: "/images/mockup-1.webp",
+    imageSrc: "/practice.svg",
   },
 ];

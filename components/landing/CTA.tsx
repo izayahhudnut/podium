@@ -1,29 +1,34 @@
 import React from "react";
-import WaitlistForm from "@/app/components/WaitlistForm";
-import { ctaDetails } from "@/components/landing/data/cta";
+import Link from "next/link";
+import Container from "@/components/landing/Container";
 
 const CTA: React.FC = () => {
     return (
-        <section id="cta" className="mt-10 mb-5 lg:my-20">
-            <div className="relative h-full w-full z-10 mx-auto py-12 sm:py-20">
-                <div className="h-full w-full">
-                    <div className="rounded-3xl opacity-95 absolute inset-0 -z-10 h-full w-full bg-[#050a02] bg-[linear-gradient(to_right,#12170f_1px,transparent_1px),linear-gradient(to_bottom,#12170f_1px,transparent_1px)] bg-[size:6rem_4rem]">
-                        <div className="rounded-3xl absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_600px_at_50%_500px,#1C1C02,transparent)]"></div>
-                    </div>
-
-                    <div className="h-full flex flex-col items-center justify-center text-white text-center px-5">
-                        <h2 className="text-2xl sm:text-3xl md:text-5xl md:leading-tight font-semibold mb-4 max-w-2xl">{ctaDetails.heading}</h2>
-
-                        <p className="mx-auto max-w-xl md:px-5">{ctaDetails.subheading}</p>
-
-                        <div className="mt-4 flex flex-col sm:flex-row items-center sm:gap-4">
-                        <WaitlistForm variant="dark" />
-                        </div>
-                    </div>
+        <section
+            id="cta"
+            className="relative overflow-hidden bg-[#0F0D13] py-20 md:py-24"
+            style={{
+                backgroundImage:
+                    "repeating-linear-gradient(to right, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px), repeating-linear-gradient(to bottom, rgba(255,255,255,0.04) 0 1px, transparent 1px 44px)",
+            }}
+        >
+            <div className="pointer-events-none absolute inset-0 bg-[#171717]/20" />
+            <Container>
+                <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center text-white">
+                    <h2 className="text-3xl font-bold leading-tight md:text-5xl">Get Started Today</h2>
+                    <p className="mt-3 max-w-2xl text-white/70">
+                        Join the waitlist and be first to launch your next debate or speech on Podium.
+                    </p>
+                    <Link
+                        href="/waitlist"
+                        className="mt-7 inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black transition hover:bg-white/90"
+                    >
+                        Join waitlist
+                    </Link>
                 </div>
-            </div>
+            </Container>
         </section>
-    )
-}
+    );
+};
 
 export default CTA
