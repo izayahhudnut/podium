@@ -12,13 +12,13 @@ const CTA: React.FC = () => {
                 <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center text-white">
                     <h2 className="text-3xl font-bold leading-tight md:text-5xl">Get Started Today</h2>
                     <p className="mt-3 max-w-2xl text-white/70">
-                        Join the waitlist and be first to launch your next debate or speech on Podium.
+                        Log in and launch your next debate or speech on Podium.
                     </p>
                     <Link
-                        href="/waitlist"
+                        href="/sign-in"
                         className="mt-7 inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black transition hover:bg-white/90"
                     >
-                        Join waitlist
+                        Log in
                     </Link>
                 </div>
             </Container>

@@ -27,10 +27,10 @@ const Header: React.FC = () => {
 
                     <div className="hidden md:flex">
                         <Link
-                            href="/waitlist"
+                            href="/sign-in"
                             className="bg-white text-black hover:bg-white/90 px-6 py-2 rounded-full transition-colors font-medium"
                         >
-                            Join waitlist
+                            Log in
                         </Link>
                     </div>
 
@@ -59,11 +59,11 @@ const Header: React.FC = () => {
                 <div id="mobile-menu" className="md:hidden bg-[#0F0D13] shadow-lg">
                     <div className="pt-4 pb-6 px-6">
                         <Link
-                            href="/waitlist"
+                            href="/sign-in"
                             className="bg-white text-black hover:bg-white/90 px-5 py-2 rounded-full w-fit font-medium"
                             onClick={toggleMenu}
                         >
-                            Join waitlist
+                            Log in
                         </Link>
                     </div>
                 </div>
