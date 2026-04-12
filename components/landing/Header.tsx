@@ -1,19 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
-import { HiOutlineXMark, HiBars3 } from "react-icons/hi2";
+import React from "react";
 
 import Container from "./Container";
 import { siteDetails } from "@/components/landing/data/siteDetails";
 
 const Header: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const toggleMenu = () => {
-        setIsOpen(!isOpen);
-    };
-
     return (
         <header className="sticky top-0 z-50 mx-auto w-full bg-[#0F0D13]/90 backdrop-blur">
             <Container className="!px-0">
@@ -25,49 +18,21 @@ const Header: React.FC = () => {
                         </span>
                     </Link>
 
-                    <div className="hidden md:flex">
-                        <Link
-                            href="/sign-in"
-                            className="bg-white text-black hover:bg-white/90 px-6 py-2 rounded-full transition-colors font-medium"
-                        >
-                            Log in
-                        </Link>
-                    </div>
+                    <Link
+                        href="/sign-in"
+                        className="hidden md:block bg-white text-black hover:bg-white/90 px-6 py-2 rounded-full transition-colors font-medium"
+                    >
+                        Log in
+                    </Link>
 
-                    {/* Mobile Menu Button */}
-                    <div className="md:hidden flex items-center">
-                        <button
-                            onClick={toggleMenu}
-                            type="button"
-                            className="text-white focus:outline-none w-10 h-10 flex items-center justify-center"
-                            aria-controls="mobile-menu"
-                            aria-expanded={isOpen}
-                        >
-                            {isOpen ? (
-                                <HiOutlineXMark className="h-6 w-6" aria-hidden="true" />
-                            ) : (
-                                <HiBars3 className="h-6 w-6" aria-hidden="true" />
-                            )}
-                            <span className="sr-only">Toggle navigation</span>
-                        </button>
-                    </div>
+                    <Link
+                        href="/sign-in"
+                        className="md:hidden text-white font-medium"
+                    >
+                        Log in
+                    </Link>
                 </nav>
             </Container>
-
-            {/* Mobile Menu */}
-            {isOpen ? (
-                <div id="mobile-menu" className="md:hidden bg-[#0F0D13] shadow-lg">
-                    <div className="pt-4 pb-6 px-6">
-                        <Link
-                            href="/sign-in"
-                            className="bg-white text-black hover:bg-white/90 px-5 py-2 rounded-full w-fit font-medium"
-                            onClick={toggleMenu}
-                        >
-                            Log in
-                        </Link>
-                    </div>
-                </div>
-            ) : null}
         </header>
     );
 };
