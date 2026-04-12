@@ -59,3 +59,13 @@ export async function supabaseRequest<T>(
 
   return (await response.json()) as T;
 }
+
+export async function supabaseRpcRequest<T>(
+  name: string,
+  body?: Record<string, unknown>
+): Promise<T> {
+  return supabaseRequest<T>(`rpc/${name}`, {
+    method: "POST",
+    body,
+  });
+}
